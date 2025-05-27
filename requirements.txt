@@ -1,0 +1,7 @@
+sentence-transformers
+openai
+numpy
+pandas
+pyodbc
+boto3
+flask

@@ -1,0 +1,10 @@
+{
+  "model": "claude-3.5-sonnet",
+  "endpoint": "http://localhost:5000/api"
+}
+{
+    "api_key": "your_openai_api_key_here",
+    "endpoint": "https://api.openai.com/v1",
+    "mock_enabled": true,
+    "mock_endpoint": "http://localhost:9000/api"
+}

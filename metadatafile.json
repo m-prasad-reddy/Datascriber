@@ -1,0 +1,135 @@
+{
+    "schema": "default",
+    "delimiter": "\t",
+    "tables": [
+        {
+            "name": "brands",
+            "description": "Stores information about product brands",
+            "columns": [
+                {"name": "brand_id", "type": "INT", "description": "Unique identifier for the brand", "references": null},
+                {"name": "brand_name", "type": "VARCHAR(255)", "description": "Name of the brand", "references": null}
+            ]
+        },
+        {
+            "name": "candidates",
+            "description": "Stores information about job candidates",
+            "columns": [
+                {"name": "candidate_id", "type": "INT", "description": "Unique identifier for the candidate", "references": null},
+                {"name": "first_name", "type": "VARCHAR(50)", "description": "Candidate's first name", "references": null},
+                {"name": "last_name", "type": "VARCHAR(50)", "description": "Candidate's last name", "references": null},
+                {"name": "email", "type": "VARCHAR(100)", "description": "Candidate's email address", "references": null}
+            ]
+        },
+        {
+            "name": "categories",
+            "description": "Stores product category information",
+            "columns": [
+                {"name": "category_id", "type": "INT", "description": "Unique identifier for the category", "references": null},
+                {"name": "category_name", "type": "VARCHAR(255)", "description": "Name of the category", "references": null}
+            ]
+        },
+        {
+            "name": "customers",
+            "description": "Stores customer information",
+            "columns": [
+                {"name": "customer_id", "type": "INT", "description": "Unique identifier for the customer", "references": null},
+                {"name": "first_name", "type": "VARCHAR(50)", "description": "Customer's first name", "references": null},
+                {"name": "last_name", "type": "VARCHAR(50)", "description": "Customer's last name", "references": null},
+                {"name": "phone", "type": "VARCHAR(20)", "description": "Customer's phone number", "references": null},
+                {"name": "email", "type": "VARCHAR(100)", "description": "Customer's email address", "references": null},
+                {"name": "street", "type": "VARCHAR(255)", "description": "Customer's street address", "references": null},
+                {"name": "city", "type": "VARCHAR(50)", "description": "Customer's city", "references": null},
+                {"name": "state", "type": "VARCHAR(2)", "description": "Customer's state abbreviation", "references": null},
+                {"name": "zip_code", "type": "VARCHAR(10)", "description": "Customer's zip code", "references": null}
+            ]
+        },
+        {
+            "name": "employees",
+            "description": "Stores employee information",
+            "columns": [
+                {"name": "employee_id", "type": "INT", "description": "Unique identifier for the employee", "references": null},
+                {"name": "first_name", "type": "VARCHAR(50)", "description": "Employee's first name", "references": null},
+                {"name": "last_name", "type": "VARCHAR(50)", "description": "Employee's last name", "references": null},
+                {"name": "email", "type": "VARCHAR(100)", "description": "Employee's email address", "references": null},
+                {"name": "phone", "type": "VARCHAR(20)", "description": "Employee's phone number", "references": null},
+                {"name": "hire_date", "type": "DATE", "description": "Date the employee was hired", "references": null},
+                {"name": "manager_id", "type": "INT", "description": "Identifier of the employee's manager", "references": {"table": "employees", "column": "employee_id"}}
+            ]
+        },
+        {
+            "name": "order_items",
+            "description": "Stores items within customer orders",
+            "columns": [
+                {"name": "order_id", "type": "INT", "description": "Identifier of the order", "references": {"table": "orders", "column": "order_id"}},
+                {"name": "item_id", "type": "INT", "description": "Unique identifier for the item in the order", "references": null},
+                {"name": "product_id", "type": "INT", "description": "Identifier of the product", "references": {"table": "products", "column": "product_id"}},
+                {"name": "quantity", "type": "INT", "description": "Quantity of the product ordered", "references": null},
+                {"name": "list_price", "type": "DECIMAL(10,2)", "description": "Price per unit of the product", "references": null},
+                {"name": "discount", "type": "DECIMAL(4,2)", "description": "Discount applied to the item", "references": null}
+            ]
+        },
+        {
+            "name": "orders",
+            "description": "Stores customer order information",
+            "columns": [
+                {"name": "order_id", "type": "INT", "description": "Unique identifier for the order", "references": null},
+                {"name": "customer_id", "type": "INT", "description": "Identifier of the customer", "references": {"table": "customers", "column": "customer_id"}},
+                {"name": "order_status", "type": "TINYINT", "description": "Status of the order (e.g., pending, shipped)", "references": null},
+                {"name": "order_date", "type": "DATE", "description": "Date the order was placed", "references": null},
+                {"name": "required_date", "type": "DATE", "description": "Date the order is required", "references": null},
+                {"name": "shipped_date", "type": "DATE", "description": "Date the order was shipped", "references": null},
+                {"name": "store_id", "type": "INT", "description": "Identifier of the store", "references": {"table": "stores", "column": "store_id"}},
+                {"name": "staff_id", "type": "INT", "description": "Identifier of the staff member", "references": {"table": "staffs", "column": "staff_id"}}
+            ]
+        },
+        {
+            "name": "products",
+            "description": "Stores product information",
+            "columns": [
+                {"name": "product_id", "type": "INT", "description": "Unique identifier for the product", "references": null},
+                {"name": "product_name", "type": "VARCHAR(255)", "description": "Name of the product", "references": null},
+                {"name": "brand_id", "type": "INT", "description": "Identifier of the brand", "references": {"table": "brands", "column": "brand_id"}},
+                {"name": "category_id", "type": "INT", "description": "Identifier of the category", "references": {"table": "categories", "column": "category_id"}},
+                {"name": "model_year", "type": "SMALLINT", "description": "Year the product was modeled", "references": null},
+                {"name": "list_price", "type": "DECIMAL(10,2)", "description": "Retail price of the product", "references": null}
+            ]
+        },
+        {
+            "name": "staffs",
+            "description": "Stores staff member information",
+            "columns": [
+                {"name": "staff_id", "type": "INT", "description": "Unique identifier for the staff member", "references": null},
+                {"name": "first_name", "type": "VARCHAR(50)", "description": "Staff member's first name", "references": null},
+                {"name": "last_name", "type": "VARCHAR(50)", "description": "Staff member's last name", "references": null},
+                {"name": "email", "type": "VARCHAR(100)", "description": "Staff member's email address", "references": null},
+                {"name": "phone", "type": "VARCHAR(20)", "description": "Staff member's phone number", "references": null},
+                {"name": "active", "type": "TINYINT", "description": "Whether the staff member is active", "references": null},
+                {"name": "store_id", "type": "INT", "description": "Identifier of the store", "references": {"table": "stores", "column": "store_id"}},
+                {"name": "manager_id", "type": "INT", "description": "Identifier of the manager", "references": {"table": "staffs", "column": "staff_id"}}
+            ]
+        },
+        {
+            "name": "stocks",
+            "description": "Stores product stock levels at stores",
+            "columns": [
+                {"name": "store_id", "type": "INT", "description": "Identifier of the store", "references": {"table": "stores", "column": "store_id"}},
+                {"name": "product_id", "type": "INT", "description": "Identifier of the product", "references": {"table": "products", "column": "product_id"}},
+                {"name": "quantity", "type": "INT", "description": "Quantity of the product in stock", "references": null}
+            ]
+        },
+        {
+            "name": "stores",
+            "description": "Stores information about retail stores",
+            "columns": [
+                {"name": "store_id", "type": "INT", "description": "Unique identifier for the store", "references": null},
+                {"name": "store_name", "type": "VARCHAR(255)", "description": "Name of the store", "references": null},
+                {"name": "phone", "type": "VARCHAR(20)", "description": "Store's phone number", "references": null},
+                {"name": "email", "type": "VARCHAR(100)", "description": "Store's email address", "references": null},
+                {"name": "street", "type": "VARCHAR(255)", "description": "Store's street address", "references": null},
+                {"name": "city", "type": "VARCHAR(50)", "description": "Store's city", "references": null},
+                {"name": "state", "type": "VARCHAR(2)", "description": "Store's state abbreviation", "references": null},
+                {"name": "zip_code", "type": "VARCHAR(10)", "description": "Store's zip code", "references": null}
+            ]
+        }
+    ]
+}x`

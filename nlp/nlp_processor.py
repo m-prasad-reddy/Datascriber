@@ -115,15 +115,18 @@ class NLPProcessor:
         )
         datasource_data_dir = self.config_utils.get_datasource_data_dir(self.datasource['name'])
         synonym_path = os.path.join(datasource_data_dir, synonym_file)
-        synonyms = {}
+        synonyms = {
+            "order_date": ["order date", "date", "orderdate"]
+        }  # Default synonyms
         try:
             os.makedirs(datasource_data_dir, exist_ok=True)
             if os.path.exists(synonym_path):
                 with open(synonym_path, "r") as f:
-                    synonyms = json.load(f)
+                    file_synonyms = json.load(f)
+                    synonyms.update(file_synonyms)
                 self.logger.debug(f"Loaded {self.synonym_mode} synonyms from {synonym_path}")
             else:
-                self.logger.debug(f"No synonym file found at {synonym_path}, returning empty synonyms")
+                self.logger.debug(f"No synonym file found at {synonym_path}, using default synonyms")
             return synonyms
         except Exception as e:
             self.logger.error(f"Failed to load synonyms from {synonym_path}: {str(e)}")
@@ -209,7 +212,7 @@ class NLPProcessor:
         """Process an NLQ to extract tokens, entities, and values.
 
         Args:
-            nlq (str): Natural language query (e.g., "Show products in category Bikes").
+            nlq (str): Natural language query (e.g., "Get me sales orders of 2017").
             schema (str): Schema name, defaults to 'default'.
 
         Returns:
@@ -219,7 +222,15 @@ class NLPProcessor:
             NLPError: If processing fails.
         """
         try:
-            doc = self.nlp(nlq)
+            # Clean NLQ (remove 'query' prefix and quotes if present)
+            clean_nlq = nlq.strip()
+            if clean_nlq.lower().startswith("query "):
+                clean_nlq = clean_nlq[6:].strip()
+                if clean_nlq.startswith('"') and clean_nlq.endswith('"'):
+                    clean_nlq = clean_nlq[1:-1]
+            self.logger.debug(f"Processing cleaned NLQ: {clean_nlq}")
+
+            doc = self.nlp(clean_nlq)
             tokens = [token.text.lower() for token in doc if not token.is_stop and not token.is_punct]
             entities = {ent.label_: ent.text for ent in doc.ents}
             extracted_values = {}
@@ -227,23 +238,36 @@ class NLPProcessor:
             metadata = self._get_metadata(schema)
             synonyms = self._load_synonyms(schema)
 
+            # Extract date values for date columns
             for token in tokens:
-                # Map token to synonyms
                 mapped_term = self.map_synonyms(token, synonyms, schema)
                 for table in metadata.get("tables", []):
                     for column in table.get("columns", []):
-                        col_name = column["name"]
+                        col_name = column["name"].lower()
+                        col_type = column.get("type", "").lower()
                         col_synonyms = column.get("synonyms", [])
-                        if (mapped_term.lower() == col_name.lower() or
-                            any(mapped_term.lower() == s.lower() for s in col_synonyms)):
-                            # Check for values in subsequent tokens
+                        is_date_column = any(t in col_type for t in ["date", "datetime", "datetime2"])
+
+                        if (
+                            mapped_term.lower() == col_name or
+                            any(mapped_term.lower() == s.lower() for s in col_synonyms) or
+                            (is_date_column and mapped_term.lower() in ["order", "date", "orderdate", "order_date"])
+                        ):
+                            if entities.get("DATE"):
+                                extracted_values[col_name] = entities["DATE"]
+                                self.logger.debug(f"Extracted date: {entities['DATE']} for column {col_name}")
+                            else:
+                                self.logger.debug(f"No DATE entity found for column {col_name}")
+
+                        # Check for values in subsequent tokens
+                        if (
+                            mapped_term.lower() == col_name or
+                            any(mapped_term.lower() == s.lower() for s in col_synonyms)
+                        ):
                             for t in tokens[tokens.index(token)+1:]:
                                 if "unique_values" in column and t in [v.lower() for v in column["unique_values"]]:
                                     extracted_values[col_name] = t
                                     self.logger.debug(f"Extracted value: {t} for column {col_name}")
-                                elif entities.get("DATE") and column.get("date_format"):
-                                    extracted_values[col_name] = entities["DATE"]
-                                    self.logger.debug(f"Extracted date: {entities['DATE']} for column {col_name}")
 
             result = {
                 "tokens": tokens,

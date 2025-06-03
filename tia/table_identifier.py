@@ -1,13 +1,13 @@
-import pickle
-import os
-from typing import Dict, List, Optional
-from sentence_transformers import SentenceTransformer, util
-import openai
 import logging
 import json
-from datetime import datetime
+import os
+import pickle
+import pandas as pd
 import numpy as np
-from config.utils import ConfigUtils, ConfigError
+from typing import Dict, List, Optional
+from sentence_transformers import SentenceTransformer, util
+from config.utils import ConfigUtils
+from config.logging_setup import LoggingSetup
 from storage.db_manager import DBManager, DBError
 from storage.storage_manager import StorageManager, StorageError
 
@@ -16,92 +16,126 @@ class TIAError(Exception):
     pass
 
 class TableIdentifier:
-    """Table Identifier Agent for predicting tables from natural language queries (NLQs).
+    """Table Identifier Agent for mapping NLQs to database schema elements.
 
-    Implements TIA-1.2 logic with semantic matching using either sentence-transformers or OpenAI embeddings.
-    Supports training, model generation, and metadata-based fallback for table prediction, with model type
-    and name configured via model_config.json. Uses table/column descriptions and reference columns from
-    metadatafile.json to enhance prediction accuracy.
+    Combines spacy-based NLP with semantic matching using sentence-transformers for
+    table/column prediction. Supports static/dynamic synonyms, cross-schema references,
+    manual/bulk training, and model generation. Uses rich metadata for enhanced matching.
 
     Attributes:
-        config_utils (ConfigUtils): Configuration utility instance for accessing configs.
-        logger (logging.Logger): Logger for TIA operations.
-        db_manager (DBManager): SQL Server database manager for training data and metrics.
-        storage_manager (StorageManager): S3 storage manager for metadata validation.
-        datasource (Dict): Datasource configuration from db_configurations.json.
-        model_type (str): Embedding model type ('sentence-transformers' or 'openai').
-        model_name (str): Specific model name (e.g., 'all-MiniLM-L6-v2' or 'text-embedding-3-small').
-        confidence_threshold (float): Prediction confidence threshold (default: 0.8).
-        st_model (SentenceTransformer): Sentence-transformers model instance.
-        openai_client (openai.OpenAI): OpenAI API client for embeddings.
-        model_path (str): Path to pickled model file (model_<datasource_name>.pkl).
-        loaded_model (Optional[Dict]): Loaded model data containing queries, tables, columns, embeddings.
+        config_utils (ConfigUtils): Configuration utility instance.
+        logger (logging.Logger): Datasource-specific logger.
+        datasource (Dict): Datasource configuration.
+        db_manager (Optional[DBManager]): SQL Server manager.
+        storage_manager (Optional[StorageManager]): S3 manager.
+        nlp_processor (NLPProcessor): NLP processing instance.
+        synonym_mode (str): 'static' or 'dynamic' synonym handling mode.
+        model_type (str): Embedding model type ('sentence-transformers').
+        model_name (str): Model name (e.g., 'all-MiniLM-L6-v2').
+        confidence_threshold (float): Prediction confidence threshold.
+        st_model (SentenceTransformer): Sentence-transformers model.
+        model_path (str): Path to pickled model file.
+        loaded_model (Optional[Dict]): Loaded model data.
     """
 
     def __init__(
         self,
         config_utils: ConfigUtils,
-        logger: logging.Logger,
-        db_manager: DBManager,
-        storage_manager: StorageManager,
-        datasource: Dict
+        logging_setup: LoggingSetup,
+        datasource: Dict,
+        nlp_processor: 'NLPProcessor',
+        db_manager: Optional[DBManager] = None,
+        storage_manager: Optional[StorageManager] = None
     ):
-        """Initialize TableIdentifier with configuration and dependencies.
+        """Initialize TableIdentifier.
 
         Args:
             config_utils (ConfigUtils): Configuration utility instance.
-            logger (logging.Logger): Logger instance.
-            db_manager (DBManager): SQL Server database manager.
-            storage_manager (StorageManager): S3 storage manager.
+            logging_setup (LoggingSetup): Logging setup instance.
             datasource (Dict): Datasource configuration.
+            nlp_processor (NLPProcessor): NLP processor instance.
+            db_manager (Optional[DBManager]): SQL Server manager.
+            storage_manager (Optional[StorageManager]): S3 manager.
 
         Raises:
-            TIAError: If initialization fails due to invalid configuration or model setup.
+            TIAError: If initialization fails.
         """
         self.config_utils = config_utils
-        self.logger = logger
+        self.logger = logging_setup.get_logger("tia", datasource.get("name"))
+        self.datasource = datasource
         self.db_manager = db_manager
         self.storage_manager = storage_manager
-        self.datasource = datasource
-        model_config = self.config_utils.load_model_config()
+        self.nlp_processor = nlp_processor
+        self.synonym_mode = self._load_synonym_mode()
+        model_config = self._load_model_config()
         self.model_type = model_config.get("model_type", "sentence-transformers")
-        self.model_name = model_config.get("model_name", "all-MiniLM-L6-v2" if self.model_type == "sentence-transformers" else "text-embedding-3-small")
+        self.model_name = model_config.get("model_name", "all-MiniLM-L6-v2")
         self.confidence_threshold = model_config.get("confidence_threshold", 0.8)
         self.st_model = None
-        self.openai_client = None
         self.model_path = os.path.join(self.config_utils.models_dir, f"model_{datasource['name']}.pkl")
         self.loaded_model = None
         self._init_model()
         self.logger.debug(f"Initialized TableIdentifier for datasource: {datasource['name']}")
 
-    def _init_model(self) -> None:
-        """Initialize embedding model based on model_type and model_name.
+    def _load_synonym_mode(self) -> str:
+        """Load synonym mode from configuration.
 
-        Sets up either sentence-transformers or OpenAI client with the configured model name.
+        Returns:
+            str: 'static' or 'dynamic'.
 
         Raises:
-            TIAError: If model initialization fails due to invalid model_type, model_name, or configuration.
+            TIAError: If configuration loading fails.
+        """
+        config_path = os.path.join(self.config_utils.config_dir, "synonym_config.json")
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, "r") as f:
+                    config = json.load(f)
+                mode = config.get("synonym_mode", "static")
+                if mode not in ["static", "dynamic"]:
+                    self.logger.warning(f"Invalid synonym mode {mode}, defaulting to static")
+                    return "static"
+                return mode
+            self.logger.debug("No synonym config found, defaulting to static")
+            return "static"
+        except Exception as e:
+            self.logger.error(f"Failed to load synonym config: {str(e)}")
+            raise TIAError(f"Failed to load synonym config: {str(e)}")
+
+    def _load_model_config(self) -> Dict:
+        """Load model configuration.
+
+        Returns:
+            Dict: Model configuration.
+
+        Raises:
+            TIAError: If configuration loading fails.
+        """
+        config_path = os.path.join(self.config_utils.config_dir, "model_config.json")
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, "r") as f:
+                    config = json.load(f)
+                return config
+            self.logger.debug("No model config found, using defaults")
+            return {"model_type": "sentence-transformers", "model_name": "all-MiniLM-L6-v2", "confidence_threshold": 0.8}
+        except Exception as e:
+            self.logger.error(f"Failed to load model config: {str(e)}")
+            raise TIAError(f"Failed to load model config: {str(e)}")
+
+    def _init_model(self) -> None:
+        """Initialize embedding model.
+
+        Raises:
+            TIAError: If model initialization fails.
         """
         try:
             if self.model_type == "sentence-transformers":
-                if not self.model_name:
-                    raise TIAError("Missing model_name for sentence-transformers in model_config.json")
                 self.st_model = SentenceTransformer(self.model_name)
                 self.logger.debug(f"Initialized sentence-transformers model: {self.model_name}")
-            elif self.model_type == "openai":
-                llm_config = self.config_utils.load_llm_config()
-                if not llm_config.get("api_key") or not llm_config.get("endpoint"):
-                    raise TIAError("Missing OpenAI API key or endpoint in llm_config.json")
-                if not self.model_name:
-                    raise TIAError("Missing model_name for OpenAI in model_config.json")
-                self.openai_client = openai.OpenAI(
-                    api_key=llm_config["api_key"],
-                    base_url=llm_config["endpoint"]
-                )
-                self.logger.debug(f"Initialized OpenAI client for model: {self.model_name}")
             else:
-                self.logger.error(f"Invalid model_type: {self.model_type}")
-                raise TIAError(f"Invalid model_type: {self.model_type}")
+                self.logger.error(f"Unsupported model_type: {self.model_type}")
+                raise TIAError(f"Unsupported model_type: {self.model_type}")
             self._load_model()
         except Exception as e:
             self.logger.error(f"Failed to initialize model: {str(e)}")
@@ -110,7 +144,8 @@ class TableIdentifier:
     def _load_model(self) -> None:
         """Load pickled model if available.
 
-        Sets loaded_model to None if the model is invalid or corrupted, notifying Admin.
+        Raises:
+            TIAError: If model loading fails.
         """
         if not os.path.exists(self.model_path):
             self.logger.info(f"No model found at {self.model_path}")
@@ -126,95 +161,143 @@ class TableIdentifier:
                     self._notify_admin(f"Corrupted model file: {self.model_path}")
                     return
             self.logger.debug(f"Loaded model from {self.model_path}")
-        except (pickle.UnpicklingError, EOFError) as e:
+        except Exception as e:
             self.logger.error(f"Failed to load model {self.model_path}: {str(e)}")
-            self.loaded_model = None
-            self._notify_admin(f"Corrupted model file: {self.model_path}")
+            raise TIAError(f"Failed to load model: {str(e)}")
 
     def _notify_admin(self, message: str) -> None:
-        """Notify Admin of critical issues via rejected_queries table.
+        """Notify admin of critical issues.
 
         Args:
-            message (str): Notification message to store.
+            message (str): Notification message.
         """
         self.logger.critical(message)
         try:
             self.db_manager.store_rejected_query(
-                query="N/A",
-                reason=message,
-                user="system",
-                error_type="SYSTEM_NOTIFICATION"
+                query="N/A", reason=message, user="system", error_type="SYSTEM_NOTIFICATION"
             )
         except DBError as e:
-            self.logger.error(f"Failed to store Admin notification: {str(e)}")
+            self.logger.error(f"Failed to store admin notification: {str(e)}")
 
-    def predict_tables(self, nlq: str, user: str) -> Optional[Dict]:
-        """Predict tables for an NLQ using model-based or metadata-based matching.
+    def _get_metadata(self, schema: str) -> Dict:
+        """Fetch metadata for a schema.
 
-        Tries model-based prediction first, falling back to metadata if model fails or is unavailable.
+        Args:
+            schema (str): Schema name.
+
+        Returns:
+            Dict: Metadata dictionary.
+
+        Raises:
+            TIAError: If metadata fetching fails.
+        """
+        try:
+            if self.datasource["type"] == "sqlserver" and self.db_manager:
+                metadata = self.db_manager.get_metadata(schema)
+            elif self.datasource["type"] == "s3" and self.storage_manager:
+                metadata = self.storage_manager.get_metadata(schema)
+            else:
+                self.logger.error(f"No manager for datasource type {self.datasource['type']}")
+                raise TIAError(f"No manager for datasource type {self.datasource['type']}")
+            self.logger.debug(f"Fetched metadata for schema {schema}")
+            return metadata
+        except Exception as e:
+            self.logger.error(f"Failed to fetch metadata for schema {schema}: {str(e)}")
+            raise TIAError(f"Failed to fetch metadata: {str(e)}")
+
+    def _load_synonyms(self, schema: str) -> Dict[str, List[str]]:
+        """Load synonyms for a schema.
+
+        Args:
+            schema (str): Schema name.
+
+        Returns:
+            Dict[str, List[str]]: Synonym mappings.
+
+        Raises:
+            TIAError: If synonym loading fails.
+        """
+        synonym_file = (
+            f"synonyms_{schema}.json" if self.synonym_mode == "static"
+            else f"dynamic_synonyms_{schema}.json"
+        )
+        datasource_data_dir = self.config_utils.get_datasource_data_dir(self.datasource['name'])
+        synonym_path = os.path.join(datasource_data_dir, synonym_file)
+        synonyms = {}
+        try:
+            if os.path.exists(synonym_path):
+                with open(synonym_path, "r") as f:
+                    synonyms = json.load(f)
+                self.logger.debug(f"Loaded {self.synonym_mode} synonyms from {synonym_path}")
+            return synonyms
+        except Exception as e:
+            self.logger.error(f"Failed to load synonyms from {synonym_path}: {str(e)}")
+            raise TIAError(f"Failed to load synonyms: {str(e)}")
+
+    def predict_tables(self, nlq: str, user: str, schema: str = "default") -> Optional[Dict]:
+        """Predict tables and columns for an NLQ.
+
+        Uses model-based prediction with fallback to metadata-based matching.
 
         Args:
             nlq (str): Natural language query.
-            user (str): User submitting the query (datauser or admin).
+            user (str): User submitting the query (admin/datauser).
+            schema (str): Schema name, defaults to 'default'.
 
         Returns:
-            Optional[Dict]: Dictionary with tables, columns, DDL, NLQ, conditions, and SQL, or None if prediction fails.
+            Optional[Dict]: Prediction result or None if failed.
 
         Raises:
-            TIAError: If prediction fails critically due to configuration or model issues.
+            TIAError: If prediction fails critically.
         """
         try:
             if self.loaded_model:
-                result = self._predict_with_model(nlq)
+                result = self._predict_with_model(nlq, schema)
                 if result:
-                    self.logger.debug(f"Model-based prediction successful for NLQ: {nlq}")
+                    self.logger.info(f"Model-based prediction for NLQ: {nlq}")
                     return result
-            self.logger.debug(f"Falling back to metadata for NLQ: {nlq}")
-            result = self._predict_with_metadata(nlq)
+            result = self._predict_with_metadata(nlq, schema)
             if result:
-                self.logger.info(f"Metadata-based prediction successful for NLQ: {nlq}")
+                self.logger.info(f"Metadata-based prediction for NLQ: {nlq}")
                 return result
-        except ConfigError as e:
-            self.logger.error(f"Prediction failed: {str(e)}")
-        self.logger.error(f"No tables predicted for NLQ: {nlq}")
-        try:
+            self.logger.error(f"No tables predicted for NLQ: {nlq}")
             self.db_manager.store_rejected_query(
-                query=nlq,
-                reason="Unable to process request",
-                user=user,
-                error_type="TIA_FAILURE"
+                query=nlq, reason="Unable to process request", user=user, error_type="TIA_FAILURE"
             )
-        except DBError as e:
-            self.logger.error(f"Failed to store rejected query: {str(e)}")
-        self._notify_admin(f"TIA failed to process NLQ: {nlq}")
-        return None
+            self._notify_admin(f"TIA failed to process NLQ: {nlq}")
+            return None
+        except Exception as e:
+            self.logger.error(f"Prediction failed for NLQ '{nlq}': {str(e)}")
+            raise TIAError(f"Prediction failed: {str(e)}")
 
-    def _predict_with_model(self, nlq: str) -> Optional[Dict]:
-        """Predict tables using model embeddings and cosine similarity.
+    def _predict_with_model(self, nlq: str, schema: str) -> Optional[Dict]:
+        """Predict using model embeddings.
 
         Args:
             nlq (str): Natural language query.
+            schema (str): Schema name.
 
         Returns:
-            Optional[Dict]: Predicted tables and metadata, or None if confidence is below threshold.
+            Optional[Dict]: Prediction result or None.
         """
         try:
-            nlq_embedding = self._encode(nlq)
+            nlq_embedding = self._encode_query(nlq)
             similarities = util.cos_sim(nlq_embedding, self.loaded_model["embeddings"])[0]
             max_sim_idx = np.argmax(similarities)
-            max_sim_score = similarities[max_sim_idx].item()
+            max_sim_score = float(similarities[max_sim_idx])
             if max_sim_score >= self.confidence_threshold:
-                matched_query = self.loaded_model["queries"][max_sim_idx]
-                matched_tables = self.loaded_model["tables"][max_sim_idx]
-                matched_columns = self.loaded_model["columns"][max_sim_idx]
-                self.logger.debug(f"Model match: score={max_sim_score}, tables={matched_tables}")
+                query = self.loaded_model["queries"][max_sim_idx]
+                tables = self.loaded_model["tables"][max_sim_idx]
+                columns = self.loaded_model["columns"][max_sim_idx]
+                nlp_result = self.nlp_processor.process_query(nlq, schema)
                 return {
-                    "tables": matched_tables,
-                    "columns": matched_columns,
-                    "ddl": self._generate_ddl(matched_tables),
-                    "nlq": nlq,
-                    "conditions": self._extract_conditions(nlq),
-                    "sql": self._get_stored_sql(matched_query)
+                    "tables": tables,
+                    "columns": columns,
+                    "extracted_values": nlp_result.get("extracted_values", {}),
+                    "placeholders": ["?" for _ in nlp_result.get("extracted_values", {})],
+                    "ddl": self._generate_ddl(tables, schema),
+                    "conditions": self._extract_conditions(nlp_result),
+                    "sql": self._get_stored_sql(query)
                 }
             self.logger.debug(f"Model confidence too low: {max_sim_score}")
             return None
@@ -222,246 +305,261 @@ class TableIdentifier:
             self.logger.error(f"Model prediction error: {str(e)}")
             return None
 
-    def _predict_with_metadata(self, nlq: str) -> Optional[Dict]:
-        """Predict tables using metadata-based fallback with semantic matching.
-
-        Uses table names, table descriptions, column descriptions, and reference columns to match NLQ.
-        Includes referenced tables to capture relationships (e.g., products.brand_id links to brands).
+    def _predict_with_metadata(self, nlq: str, schema: str) -> Optional[Dict]:
+        """Predict using metadata and spacy.
 
         Args:
             nlq (str): Natural language query.
+            schema (str): Schema name.
 
         Returns:
-            Optional[Dict]: Predicted tables and metadata, or None if no match is found.
+            Optional[Dict]: Prediction result or None.
         """
-        metadata = self.config_utils.load_metadata(self.datasource, schema="default")
-        tables = metadata.get("tables", [])
-        if not tables:
-            self.logger.error("No tables found in metadata")
-            return None
-
-        # Combine table names, descriptions, and column descriptions for embedding
-        table_texts = []
-        table_info = []
-        for table in tables:
-            table_name = table["name"]
-            table_desc = table.get("description", "")
-            column_texts = [
-                f"{col['name']}: {col.get('description', '')}" for col in table.get("columns", [])
-            ]
-            combined_text = f"{table_name}: {table_desc}. Columns: {'; '.join(column_texts)}"
-            table_texts.append(combined_text)
-            table_info.append({
-                "name": table_name,
-                "columns": [col["name"] for col in table.get("columns", [])]
-            })
-
-        # Encode NLQ and table texts
         try:
-            table_embeddings = self._encode(table_texts)
-            nlq_embedding = self._encode(nlq)
-            similarities = util.cos_sim(nlq_embedding, table_embeddings)[0]
-            max_sim_idx = np.argmax(similarities)
-            max_sim_score = similarities[max_sim_idx].item()
+            nlp_result = self.nlp_processor.process_query(nlq, schema)
+            tokens = nlp_result.get("tokens", [])
+            extracted_values = nlp_result.get("extracted_values", {})
+            metadata = self._get_metadata(schema)
+            synonyms = self._load_synonyms(schema)
 
-            if max_sim_score >= self.confidence_threshold:
-                matched_table = table_info[max_sim_idx]["name"]
-                matched_columns = table_info[max_sim_idx]["columns"]
-                # Include referenced tables
-                related_tables = self._get_referenced_tables(matched_table, tables)
-                predicted_tables = [matched_table] + related_tables
-                self.logger.debug(f"Metadata match: table={matched_table}, score={max_sim_score}, related_tables={related_tables}")
-                return {
-                    "tables": predicted_tables,
-                    "columns": matched_columns,
-                    "ddl": self._generate_ddl(predicted_tables),
-                    "nlq": nlq,
-                    "conditions": self._extract_conditions(nlq),
-                    "sql": None
-                }
-            self.logger.debug(f"Metadata no match: score={max_sim_score}")
-            return None
+            result = {
+                "tables": [],
+                "columns": [],
+                "extracted_values": extracted_values,
+                "placeholders": ["?" for _ in extracted_values],
+                "ddl": "",
+                "conditions": self._extract_conditions(nlp_result),
+                "sql": None
+            }
+
+            for token in tokens:
+                mapped_term = self.nlp_processor.map_synonyms(token, synonyms)
+                for table in metadata.get("tables", []):
+                    table_name = table["name"]
+                    if (mapped_term.lower() in table_name.lower() or
+                        any(mapped_term.lower() in s.lower() for s in table.get("synonyms", []))):
+                        if table_name not in result["tables"]:
+                            result["tables"].append(table_name)
+                    for column in table.get("columns", []):
+                        col_name = column["name"]
+                        col_synonyms = column.get("synonyms", [])
+                        if (mapped_term.lower() in col_name.lower() or
+                            any(mapped_term.lower() in s.lower() for s in col_synonyms)):
+                            if col_name not in result["columns"]:
+                                result["columns"].append(col_name)
+                        if "unique_values" in column:
+                            for value in column["unique_values"]:
+                                if token.lower() == value.lower():
+                                    result["extracted_values"][col_name] = value
+                                    if "?" not in result["placeholders"]:
+                                        result["placeholders"].append("?")
+
+            for table in metadata.get("tables", []):
+                for column in table.get("columns", []):
+                    if column.get("references"):
+                        ref_table = column["references"]["table"]
+                        ref_schema, ref_table_name = (
+                            ref_table.split(".") if "." in ref_table else (schema, ref_table)
+                        )
+                        if ref_table_name in result["tables"] and table["name"] not in result["tables"]:
+                            result["tables"].append(table["name"])
+
+            if not result["tables"]:
+                self.logger.debug(f"No tables identified for NLQ: {nlq}")
+                return None
+
+            result["ddl"] = self._generate_ddl(result["tables"], schema)
+            return result
         except Exception as e:
             self.logger.error(f"Metadata prediction error: {str(e)}")
             return None
 
-    def _get_referenced_tables(self, table_name: str, tables: List[Dict]) -> List[str]:
-        """Get tables referenced by the given table's columns.
+    def _encode_query(self, text: str | List[str]) -> np.ndarray:
+        """Encode text using sentence-transformers.
 
         Args:
-            table_name (str): Name of the table to check references for.
-            tables (List[Dict]): List of table metadata dictionaries.
+            text (str | List[str]): Text to encode.
 
         Returns:
-            List[str]: List of referenced table names.
+            np.ndarray: Embeddings.
         """
-        referenced_tables = set()
+        return self.st_model.encode(text, convert_to_tensor=True).cpu().numpy()
+
+    def _generate_ddl(self, tables: List[str], schema: str) -> str:
+        """Generate DDL statement for tables.
+
+        Args:
+            tables (List[str]): Table names.
+            schema (str): Schema name.
+
+        Returns:
+            str: DDL string.
+        """
+        metadata = self._get_metadata(schema)
+        ddl_parts = []
         for table in tables:
-            if table["name"] == table_name:
-                for column in table.get("columns", []):
-                    ref = column.get("references")
-                    if ref and isinstance(ref, dict) and "table" in ref:
-                        referenced_tables.add(ref["table"])
-        self.logger.debug(f"Referenced tables for {table_name}: {referenced_tables}")
-        return list(referenced_tables)
+            for meta_table in metadata.get("tables", []):
+                if meta_table["name"] == table:
+                    columns = [
+                        f"{col['name']} {col['type']}" for col in meta_table.get("columns", [])
+                    ]
+                    ddl_parts.append(f"CREATE TABLE {schema}.{table} ({', '.join(columns)});")
+        return "\n".join(ddl_parts)
 
-    def _encode(self, text: str | List[str]) -> np.ndarray:
-        """Encode text using the selected embedding model.
-
-        Args:
-            text (str | List[str]): Text or list of texts to encode.
-
-        Returns:
-            np.ndarray: Array of embeddings.
-
-        Raises:
-            TIAError: If encoding fails for OpenAI model.
-        """
-        if self.model_type == "sentence-transformers":
-            return self.st_model.encode(text, convert_to_tensor=True).cpu().numpy()
-        else:
-            try:
-                response = self.openai_client.embeddings.create(
-                    input=text,
-                    model=self.model_name
-                )
-                return np.array([emb.embedding for emb in response.data])
-            except openai.OpenAIError as e:
-                self.logger.error(f"OpenAI embedding failed: {str(e)}")
-                raise TIAError(f"OpenAI embedding failed: {str(e)}")
-
-    def _generate_ddl(self, tables: List[str]) -> str:
-        """Generate DDL statement for tables (placeholder).
+    def _extract_conditions(self, nlp_result: Dict) -> Dict:
+        """Extract conditions from NLP result.
 
         Args:
-            tables (List[str]): List of table names.
+            nlp_result (Dict): NLP processing result.
 
         Returns:
-            str: DDL string for the tables.
+            Dict: Conditions dictionary.
         """
-        return f"CREATE TABLE {', '.join(tables)} (...);"
-
-    def _extract_conditions(self, nlq: str) -> Dict:
-        """Extract conditions from NLQ (placeholder).
-
-        Args:
-            nlq (str): Natural language query.
-
-        Returns:
-            Dict: Dictionary of extracted conditions.
-        """
-        return {"conditions": []}
+        conditions = []
+        for key, value in nlp_result.get("extracted_values", {}).items():
+            if isinstance(value, list):
+                conditions.append(f"{key} IN {tuple(value)}")
+            else:
+                conditions.append(f"{key} = '{value}'")
+        return {"conditions": conditions}
 
     def _get_stored_sql(self, query: str) -> Optional[str]:
-        """Retrieve stored SQL query from training data.
+        """Retrieve stored SQL from training data.
 
         Args:
-            query (str): NLQ to match against training data.
+            query (str): NLQ to match.
 
         Returns:
-            Optional[str]: Stored SQL query, or None if not found.
+            Optional[str]: SQL query or None.
         """
-        table_name = f"training_data_{self.datasource['name']}"
-        select_query = f"SELECT relevant_sql FROM {table_name} WHERE user_query = ?"
         try:
-            cursor = self.db_manager.connection.cursor()
-            cursor.execute(select_query, query)
+            cursor = self.db_manager.sqlite_conn.cursor()
+            cursor.execute(
+                f"SELECT relevant_sql FROM training_data_{self.datasource['name']} WHERE user_query = ?",
+                (query,)
+            )
             result = cursor.fetchone()
-            cursor.close()
             return result[0] if result else None
-        except pyodbc.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to retrieve stored SQL: {str(e)}")
             return None
+        finally:
+            cursor.close()
 
-    def train_manual(self, nlq: str, tables: List[str], columns: List[str], sql: str) -> None:
-        """Store manual training data for model training.
-
-        Validates S3 data against metadata if applicable and stores in SQL Server.
+    def train_manual(self, nlq: str, tables: List[str], columns: List[str], extracted_values: Dict, placeholders: List[str], sql: str) -> None:
+        """Store manual training data.
 
         Args:
             nlq (str): Natural language query.
-            tables (List[str]): List of related tables.
-            columns (List[str]): List of specific columns.
-            sql (str): Equivalent SQL query.
+            tables (List[str]): Related tables.
+            columns (List[str]): Specific columns.
+            extracted_values (Dict): Extracted values.
+            placeholders (List[str]): Placeholders.
+            sql (str): SQL query.
 
         Raises:
-            TIAError: If storage or validation fails.
+            TIAError: If storage fails.
         """
         training_data = {
-            "db_config": self.datasource["type"],
+            "db_source_type": self.datasource["type"],
             "db_name": self.datasource["name"],
             "user_query": nlq,
             "related_tables": ",".join(tables),
             "specific_columns": ",".join(columns),
+            "extracted_values": json.dumps(extracted_values),
+            "placeholders": json.dumps(placeholders),
             "relevant_sql": sql
         }
         try:
-            if self.datasource["type"] == "s3":
-                self.storage_manager.validate_training_data(training_data)
             self.db_manager.store_training_data(training_data)
             self.logger.info(f"Stored manual training data for NLQ: {nlq}")
-        except (DBError, StorageError) as e:
+        except DBError as e:
             self.logger.error(f"Failed to store training data: {str(e)}")
             raise TIAError(f"Failed to store training data: {str(e)}")
 
     def train_bulk(self, training_data: List[Dict]) -> None:
-        """Store bulk training data from a CSV or list.
+        """Store bulk training data.
 
         Args:
             training_data (List[Dict]): List of training data dictionaries.
 
         Raises:
-            TIAError: If storage or validation fails.
+            TIAError: If storage fails.
         """
         for data in training_data:
             try:
-                if self.datasource["type"] == "s3":
-                    self.storage_manager.validate_training_data(data)
                 self.db_manager.store_training_data(data)
-            except (DBError, StorageError) as e:
+            except DBError as e:
                 self.logger.error(f"Failed to store bulk training data: {str(e)}")
                 raise TIAError(f"Failed to store bulk training data: {str(e)}")
         self.logger.info(f"Stored {len(training_data)} bulk training records")
 
-    def generate_model(self) -> None:
-        """Generate or update the prediction model from training data.
+    def train(self, training_data: List[Dict]) -> None:
+        """Train the prediction model using provided training data.
 
-        Queries training data, generates embeddings, and stores the model as a pickle file.
+        Args:
+            training_data (List[Dict]): List of training data dictionaries.
 
         Raises:
-            TIAError: If model generation or storage fails.
+            TIAError: If training fails.
         """
-        table_name = f"training_data_{self.datasource['name']}"
-        select_query = f"SELECT user_query, related_tables, specific_columns FROM {table_name}"
         try:
-            cursor = self.db_manager.connection.cursor()
-            cursor.execute(select_query)
-            rows = cursor.fetchall()
-            cursor.close()
-
-            queries = [row[0] for row in rows]
-            tables = [row[1].split(",") for row in rows]
-            columns = [row[2].split(",") for row in rows]
-            embeddings = self._encode(queries)
-
+            self.logger.debug(f"Training model with {len(training_data)} data entries")
+            queries = [data["user_query"] for data in training_data]
+            tables = [data["related_tables"].split(",") for data in training_data]
+            columns = [data["specific_columns"].split(",") for data in training_data]
+            embeddings = self._encode_query(queries)
+            
             model_data = {
                 "queries": queries,
                 "tables": tables,
                 "columns": columns,
                 "embeddings": embeddings
             }
+            
+            os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
             with open(self.model_path, "wb") as f:
                 pickle.dump(model_data, f)
-            self.logger.info(f"Generated model at {self.model_path}")
-
+            
+            self.logger.info(f"Trained model and saved at {self.model_path}")
             metrics = {
                 "model_version": "1.0",
-                "precision": 0.95,
+                "precision": 0.95,  # Placeholder: Implement actual metric calculation
                 "recall": 0.90,
                 "nlq_breakdown": {q: {"precision": 0.95, "recall": 0.90} for q in queries}
             }
             self.db_manager.store_model_metrics(metrics)
             self._load_model()
-        except (pyodbc.Error, DBError) as e:
-            self.logger.error(f"Failed to generate model: {str(e)}")
-            raise TIAError(f"Failed to generate model: {str(e)}")
+        except Exception as e:
+            self.logger.error(f"Failed to train model: {str(e)}")
+            raise TIAError(f"Failed to train model: {str(e)}")
+
+    def generate_model(self) -> None:
+        """Generate a default prediction model when no training data is available.
+
+        Raises:
+            TIAError: If model generation fails.
+        """
+        try:
+            self.logger.debug("Generating default model (no training data)")
+            model_data = {
+                "queries": [],
+                "tables": [],
+                "columns": [],
+                "embeddings": np.array([])
+            }
+            os.makedirs(os.path.dirname(self.model_path), exist_ok=True)
+            with open(self.model_path, "wb") as f:
+                pickle.dump(model_data, f)
+            self.logger.info(f"Generated default model at {self.model_path}")
+            metrics = {
+                "model_version": "1.0",
+                "precision": 0.0,
+                "recall": 0.0,
+                "nlq_breakdown": {}
+            }
+            self.db_manager.store_model_metrics(metrics)
+            self._load_model()
+        except Exception as e:
+            self.logger.error(f"Failed to generate default model: {str(e)}")
+            raise TIAError(f"Failed to generate default model: {str(e)}")

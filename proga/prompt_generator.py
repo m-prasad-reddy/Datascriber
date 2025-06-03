@@ -1,294 +1,252 @@
-import requests
-from typing import Dict, Optional, List
-import logging
 import json
+import os
+from typing import Dict, List, Optional
+import logging
+import requests
 from config.utils import ConfigUtils, ConfigError
 from config.logging_setup import LoggingSetup
-from storage.db_manager import DBManager, DBError
-from storage.storage_manager import StorageManager, StorageError
+from nlp.nlp_processor import NLPProcessor
+from storage.db_manager import DBManager
+from storage.storage_manager import StorageManager
 
-class PROGAError(Exception):
-    """Custom exception for Prompt Generation Agent errors."""
+class PromptError(Exception):
+    """Custom exception for prompt generation errors."""
     pass
 
 class PromptGenerator:
-    """Prompt Generation Agent for generating SQL queries using LLMs.
+    """Prompt generator for creating SQL query prompts in the Datascriber project.
 
-    Generates LLM prompts from TIA outputs, incorporating table/column descriptions and references
-    from metadata. Interacts with LLMs via API or mock endpoints to produce SQL queries. Failed
-    queries are stored in the rejected_queries table.
+    Generates prompts based on NLQ processing results, table/column mappings, and rich metadata.
+    Supports mock LLM mode for testing and prepares for real LLM integration.
 
     Attributes:
-        config_utils (ConfigUtils): Instance for configuration access.
-        logger (logging.Logger): Logger instance for PROGA operations.
-        db_manager (DBManager): Instance for database operations.
-        storage_manager (StorageManager): Instance for S3 storage operations.
-        datasource (Dict): Current datasource configuration.
-        llm_config (Dict): LLM configuration (api_key, endpoint, mock_enabled).
-        prompt_template (str): Template for LLM prompts.
+        config_utils (ConfigUtils): Configuration utility instance.
+        logging_setup (LoggingSetup): Logging setup instance.
+        logger (logging.Logger): Prompt generator logger.
+        datasource (Dict): Datasource configuration.
+        nlp_processor (NLPProcessor): NLP processor instance.
+        db_manager (Optional[DBManager]): SQL Server manager.
+        storage_manager (Optional[StorageManager]): S3 manager.
+        llm_config (Dict): LLM configuration from llm_config.json.
     """
 
-    def __init__(self, config_utils: ConfigUtils, logging_setup: LoggingSetup, db_manager: DBManager, storage_manager: StorageManager, datasource: Dict):
-        """Initialize PromptGenerator with configuration, logging, and storage.
+    def __init__(
+        self,
+        config_utils: ConfigUtils,
+        logging_setup: LoggingSetup,
+        datasource: Dict,
+        nlp_processor: NLPProcessor,
+        db_manager: Optional[DBManager] = None,
+        storage_manager: Optional[StorageManager] = None
+    ):
+        """Initialize PromptGenerator.
 
         Args:
-            config_utils (ConfigUtils): Instance for configuration access.
-            logging_setup (LoggingSetup): Instance for logging setup.
-            db_manager (DBManager): Instance for database operations.
-            storage_manager (StorageManager): Instance for S3 operations.
-            datasource (Dict): Datasource configuration from db_configurations.json.
+            config_utils (ConfigUtils): Configuration utility instance.
+            logging_setup (LoggingSetup): Logging setup instance.
+            datasource (Dict): Datasource configuration.
+            nlp_processor (NLPProcessor): NLP processor instance.
+            db_manager (Optional[DBManager]): SQL Server manager.
+            storage_manager (Optional[StorageManager]): S3 manager.
 
         Raises:
-            PROGAError: If initialization fails.
+            PromptError: If initialization fails.
         """
-        self.config_utils = config_utils
-        self.logger = logging_setup.get_logger("proga")
-        self.db_manager = db_manager
-        self.storage_manager = storage_manager
-        self.datasource = datasource
         try:
-            self.llm_config = self.config_utils.load_llm_config()
-            self.mock_enabled = self.llm_config.get("mock_enabled", False)
-            self.mock_endpoint = self.llm_config.get("mock_endpoint")
-        except ConfigError as e:
-            self.logger.error(f"Failed to load LLM config: {str(e)}")
-            raise PROGAError(f"Failed to load LLM config: {str(e)}")
-        self.prompt_template = """
-        Given the following natural language query and database context, generate a valid SQL query for {db_type}.
-        
-        **Database Context:**
-        {schema_info}
-        
-        **Query:**
-        {nlq}
-        
-        **Conditions:**
-        {conditions}
-        
-        **Aggregations (if applicable):**
-        {aggregations}
-        
-        **Example Query:**
-        - Example NLQ: {example_nlq}
-        - Example Schema: {example_schema}
-        - Example SQL: {example_sql}
-        
-        **Instructions:**
-        - Generate a SELECT query only; do not include INSERT, UPDATE, or DELETE.
-        - Use table aliases for clarity if multiple tables are involved.
-        - Include appropriate JOINs for referenced tables.
-        - Ensure the query is compatible with {db_type} syntax.
-        - Return only the SQL query, without explanations.
-        """
-        self.logger.debug(f"Initialized PROGA for datasource: {datasource['name']}")
-
-    def generate_sql(self, tia_output: Dict, user: str) -> Optional[str]:
-        """Generate SQL query from TIA output using the LLM.
-
-        Args:
-            tia_output (Dict): TIA output with tables, columns, DDL, NLQ, conditions, and optional SQL.
-            user (str): User submitting the query (datauser or admin).
-
-        Returns:
-            Optional[str]: Generated SQL query, or None if LLM fails.
-
-        Raises:
-            PROGAError: If prompt generation or API call fails critically.
-        """
-        if not tia_output:
-            self.logger.error("Empty TIA output provided")
-            raise PROGAError("Empty TIA output provided")
-
-        required_keys = ["tables", "columns", "ddl", "nlq", "conditions"]
-        for key in required_keys:
-            if key not in tia_output:
-                self.logger.error(f"Missing required key '{key}' in TIA output")
-                raise PROGAError(f"Missing required key '{key}' in TIA output")
-
-        # Check if stored SQL is available
-        if tia_output.get("sql"):
-            self.logger.debug(f"Using stored SQL for NLQ: {tia_output['nlq']}")
-            return tia_output["sql"]
-
-        # Generate prompt
-        try:
-            prompt = self._generate_prompt(tia_output)
-            self.logger.debug(f"Generated prompt for NLQ: {tia_output['nlq']}")
+            self.config_utils = config_utils
+            self.logging_setup = logging_setup
+            self.logger = logging_setup.get_logger("prompt_generator", datasource.get("name"))
+            self.datasource = datasource
+            self.nlp_processor = nlp_processor
+            self.db_manager = db_manager
+            self.storage_manager = storage_manager
+            self.llm_config = self._load_llm_config()
+            self.logger.debug(f"Initialized PromptGenerator for datasource: {datasource['name']}")
         except Exception as e:
-            self.logger.error(f"Failed to generate prompt: {str(e)}")
-            raise PROGAError(f"Failed to generate prompt: {str(e)}")
+            self.logger.error(f"Failed to initialize PromptGenerator: {str(e)}")
+            raise PromptError(f"Failed to initialize PromptGenerator: {str(e)}")
 
-        # Call LLM
-        sql_query = self._call_llm(prompt)
-        if sql_query:
-            self.logger.info(f"Generated SQL for NLQ: {tia_output['nlq']}")
-            return sql_query
-
-        # Handle failure
-        error_message = "At this moment I cannot resolve your query"
-        self.logger.error(f"LLM failed for NLQ: {tia_output['nlq']}")
-        try:
-            self.db_manager.store_rejected_query(
-                query=tia_output["nlq"],
-                reason=error_message,
-                user=user,
-                error_type="NO_LLM_RESPONSE"
-            )
-        except DBError as e:
-            self.logger.error(f"Failed to store rejected query: {str(e)}")
-        return None
-
-    def _generate_prompt(self, tia_output: Dict) -> str:
-        """Generate LLM prompt from TIA output.
-
-        Includes table/column descriptions and referenced tables from metadata.
-
-        Args:
-            tia_output (Dict): TIA output with tables, columns, DDL, NLQ, conditions.
+    def _load_llm_config(self) -> Dict:
+        """Load LLM configuration from llm_config.json.
 
         Returns:
-            str: Formatted prompt string.
+            Dict: LLM configuration.
+
+        Raises:
+            PromptError: If configuration loading fails.
         """
         try:
-            metadata = self.config_utils.load_metadata(self.datasource, schema="default")
-            tables = metadata.get("tables", [])
-            nlq = tia_output["nlq"]
-            predicted_tables = tia_output["tables"]
-            predicted_columns = tia_output["columns"]
-
-            # Gather table and column info with descriptions
-            table_info = []
-            for table in tables:
-                if table["name"] in predicted_tables:
-                    table_desc = table.get("description", "No description available")
-                    columns_info = []
-                    for col in table.get("columns", []):
-                        if col["name"] in predicted_columns:
-                            col_desc = col.get("description", "No description available")
-                            ref_info = ""
-                            if col.get("references"):
-                                ref = col["references"]
-                                ref_info = f" (references {ref['table']}.{ref['column']})"
-                            columns_info.append(f"{col['name']}: {col_desc}{ref_info}")
-                    table_info.append(f"Table: {table['name']} ({table_desc})\nColumns: {', '.join(columns_info)}")
-
-            # Include referenced tables
-            referenced_tables = set()
-            for table in tables:
-                if table["name"] in predicted_tables:
-                    for col in table.get("columns", []):
-                        if col.get("references"):
-                            referenced_tables.add(col["references"]["table"])
-            for ref_table in referenced_tables:
-                if ref_table not in predicted_tables:
-                    for table in tables:
-                        if table["name"] == ref_table:
-                            table_desc = table.get("description", "No description available")
-                            columns_info = [f"{col['name']}: {col.get('description', 'No description available')}"
-                                           for col in table.get("columns", [])]
-                            table_info.append(f"Table: {table['name']} ({table_desc})\nColumns: {', '.join(columns_info)}")
-
-            schema_info = "\n\n".join(table_info) if table_info else "No schema information available."
-            db_type = "SQL Server" if self.datasource["type"] == "SQL Server" else "S3 (CSV/Parquet/ORC/TXT)"
-            conditions_str = json.dumps(tia_output["conditions"]) if tia_output["conditions"] else "None"
-            aggregations = self._detect_aggregations(nlq)
-            example_nlq = "List all products by brand"
-            example_schema = "Table: products (product_name VARCHAR(255), brand_id INT)\nTable: brands (brand_id INT, brand_name VARCHAR(255))"
-            example_sql = "SELECT p.product_name, b.brand_name FROM products p JOIN brands b ON p.brand_id = b.brand_id"
-            return self.prompt_template.format(
-                db_type=db_type,
-                schema_info=schema_info,
-                nlq=nlq,
-                conditions=conditions_str,
-                aggregations=", ".join(aggregations) if aggregations else "None",
-                example_nlq=example_nlq,
-                example_schema=example_schema,
-                example_sql=example_sql
-            )
+            config = self.config_utils.load_llm_config()
+            self.logger.debug("Loaded LLM configuration")
+            return config
         except ConfigError as e:
-            self.logger.error(f"Failed to generate prompt: {str(e)}")
-            raise PROGAError(f"Failed to generate prompt: {str(e)}")
+            self.logger.error(f"Failed to load LLM configuration: {str(e)}")
+            raise PromptError(f"Failed to load LLM configuration: {str(e)}")
 
-    def _detect_aggregations(self, nlq: str) -> List[str]:
-        """Detect aggregation types in NLQ (e.g., COUNT, SUM).
+    def _get_metadata(self, schema: str) -> Dict:
+        """Fetch rich metadata for a schema.
+
+        Args:
+            schema (str): Schema name (e.g., 'default').
+
+        Returns:
+            Dict: Rich metadata dictionary.
+
+        Raises:
+            PromptError: If metadata fetching fails.
+        """
+        try:
+            datasource_dir = self.config_utils.get_datasource_data_dir(self.datasource["name"])
+            metadata_path = os.path.join(datasource_dir, f"metadata_data_{schema}_rich.json")
+            if os.path.exists(metadata_path):
+                with open(metadata_path, "r") as f:
+                    metadata = json.load(f)
+                self.logger.debug(f"Loaded rich metadata from {metadata_path}")
+                return metadata
+            elif self.datasource["type"] == "sqlserver" and self.db_manager:
+                metadata = self.db_manager.get_metadata(schema)
+            elif self.datasource["type"] == "s3" and self.storage_manager:
+                metadata = self.storage_manager.get_metadata(schema)
+            else:
+                self.logger.error(f"No metadata source for datasource type {self.datasource['type']}")
+                raise PromptError(f"No metadata source for datasource type {self.datasource['type']}")
+            self.logger.debug(f"Fetched metadata for schema {schema}")
+            return metadata
+        except Exception as e:
+            self.logger.error(f"Failed to fetch metadata for schema {schema}: {str(e)}")
+            raise PromptError(f"Failed to fetch metadata: {str(e)}")
+
+    def generate_prompt(self, nlq: str, tia_result: Dict, schema: str = "default") -> Optional[str]:
+        """Generate an SQL query prompt based on NLQ and TIA results.
 
         Args:
             nlq (str): Natural language query.
+            tia_result (Dict): TIA prediction result with tables, columns, extracted_values, placeholders.
+            schema (str): Schema name, defaults to 'default'.
 
         Returns:
-            List[str]: List of detected aggregations.
-        """
-        aggregations = []
-        nlq_lower = nlq.lower()
-        if "count" in nlq_lower:
-            aggregations.append("COUNT")
-        if "sum" in nlq_lower:
-            aggregations.append("SUM")
-        if "average" in nlq_lower or "avg" in nlq_lower:
-            aggregations.append("AVG")
-        return aggregations
+            Optional[str]: SQL query prompt or None if generation fails.
 
-    def _call_llm(self, prompt: str) -> Optional[str]:
-        """Call the LLM API to generate SQL query.
-
-        Args:
-            prompt (str): Formatted prompt for the LLM.
-
-        Returns:
-            Optional[str]: Generated SQL query, or None if API fails.
+        Raises:
+            PromptError: If prompt generation fails critically.
         """
         try:
-            headers = {"Content-Type": "application/json"}
-            payload = {
-                "prompt": prompt,
-                "max_tokens": 500,
-                "temperature": 0.7
-            }
-            endpoint = self.mock_endpoint if self.mock_enabled else self.llm_config["endpoint"]
-            response = requests.post(
-                endpoint,
-                headers=headers,
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            sql_query = response.json().get("choices", [{}])[0].get("text", "").strip()
-            if sql_query:
-                self.logger.debug(f"LLM response: {sql_query}")
-                return sql_query
-            self.logger.error("Empty LLM response")
-            return None
-        except requests.HTTPError as e:
-            self.logger.error(f"LLM API HTTP error: {str(e)}")
-            return None
-        except (requests.RequestException, ValueError) as e:
-            self.logger.error(f"LLM API call failed: {str(e)}")
-            return None
+            self.logger.debug(f"Generating prompt for NLQ: {nlq}, tia_result: {tia_result}")
+            metadata = self._get_metadata(schema)
+            tables = tia_result.get("tables", [])
+            columns = tia_result.get("columns", [])
+            extracted_values = tia_result.get("extracted_values", {})
+            placeholders = tia_result.get("placeholders", [])
 
-if __name__ == "__main__":
-    # Example usage for testing
-    config_utils = ConfigUtils()
-    logging_setup = LoggingSetup(config_utils)
-    db_config = config_utils.load_db_config()
-    datasource = next(db for db in db_config["databases"] if db["type"] == "SQL Server")
-    db_manager = DBManager(config_utils, logging_setup.get_logger("db"), datasource)
-    storage_manager = StorageManager(config_utils, logging_setup.get_logger("storage"), datasource)
+            if not tables:
+                self.logger.warning(f"No tables predicted for NLQ: {nlq}")
+                return None
 
-    try:
-        proga = PromptGenerator(config_utils, logging_setup, db_manager, storage_manager, datasource)
-        
-        # Test SQL generation
-        tia_output = {
-            "tables": ["products", "brands"],
-            "columns": ["product_name", "brand_name", "brand_id"],
-            "ddl": "CREATE TABLE products (product_name VARCHAR(255), brand_id INT); CREATE TABLE brands (brand_id INT, brand_name VARCHAR(255));",
-            "nlq": "List all products by brand",
-            "conditions": {"brand_id": "> 0"},
-            "sql": None
-        }
-        sql = proga.generate_sql(tia_output, "datauser")
-        print("Generated SQL:", sql)
-    except (ConfigError, DBError, StorageError, PROGAError) as e:
-        print(f"Error: {str(e)}")
-    finally:
-        db_manager.close_connection()
+            # Build context
+            context = []
+            for table in metadata.get("tables", []):
+                if table["name"] in [t.split(".")[-1] for t in tables]:
+                    context.append(f"Table: {table['name']}")
+                    context.append(f"Description: {table.get('description', 'No description')}")
+                    cols = []
+                    for col in table.get("columns", []):
+                        if col["name"] in columns or col["name"] in extracted_values:
+                            col_info = f"  - {col['name']} ({col.get('type', 'unknown')})"
+                            if col.get("description"):
+                                col_info += f": {col['description']}"
+                            if col.get("references"):
+                                col_info += f", References: {col['references']['table']}.{col['references']['column']}"
+                            cols.append(col_info)
+                    if cols:
+                        context.append("Columns:")
+                        context.extend(cols)
+
+            # Build prompt
+            prompt = [
+                "Generate an SQL query for the following request.",
+                f"Natural Language Query: {nlq}",
+                "Database Schema:"
+            ]
+            prompt.extend(context)
+            if extracted_values:
+                prompt.append("Extracted Values:")
+                for col, val in extracted_values.items():
+                    prompt.append(f"  - {col}: {val}")
+            if placeholders:
+                prompt.append("Placeholders:")
+                for val in placeholders:  # Treat as list
+                    prompt.append(f"  - {val}")
+
+            prompt.append("\nSQL Query:")
+
+            if self.llm_config.get("mock_enabled", False):
+                # Mock response for testing
+                if not columns or not tables:
+                    self.logger.warning(f"Insufficient data for mock query: columns={columns}, tables={tables}")
+                    return None
+                # Build safe mock query
+                mock_query = f"SELECT {', '.join(columns)} FROM {tables[0]}"
+                if extracted_values:
+                    conditions = [f"{col} = '{val}'" for col, val in extracted_values.items()]
+                    mock_query += f" WHERE {' AND '.join(conditions)}"
+                elif "DATE" in tia_result.get("entities", {}):
+                    # Fallback for date entities (e.g., '2016')
+                    date_value = tia_result["entities"].get("DATE")
+                    if date_value and columns:
+                        mock_query += f" WHERE YEAR({columns[0]}) = '{date_value}'"
+                prompt.append(mock_query)
+                self.logger.debug(f"Generated mock SQL prompt: {mock_query}")
+            else:
+                # Placeholder for real LLM call
+                prompt.append("# TODO: LLM-generated SQL query")
+                self.logger.debug(f"Prepared SQL prompt for LLM processing: {nlq}")
+
+            final_prompt = "\n".join(prompt)
+            self.logger.info(f"Generated prompt for NLQ: {nlq}")
+            return final_prompt
+        except Exception as e:
+            self.logger.error(f"Failed to generate prompt for NLQ '{nlq}': {str(e)}")
+            raise PromptError(f"Failed to generate prompt: {str(e)}")
+
+    def mock_llm_call(self, prompt: str) -> str:
+        """Simulate an LLM call for testing purposes.
+
+        Args:
+            prompt (str): Generated prompt.
+
+        Returns:
+            str: Mock SQL query response.
+
+        Raises:
+            PromptError: If mock call fails.
+        """
+        try:
+            if self.llm_config.get("mock_enabled", False):
+                # Simple mock response based on prompt content
+                lines = prompt.split("\n")
+                tables = []
+                columns = []
+                conditions = []
+                for line in lines:
+                    if line.startswith("Table: "):
+                        tables.append(line.replace("Table: ", ""))
+                    elif line.startswith("  - ") and "(" in line:
+                        col_name = line.split("-")[1].split("(")[0].strip()
+                        columns.append(col_name)
+                    elif line.startswith("  - ") and ":" in line:
+                        parts = line.split(":")
+                        if len(parts) > 1:
+                            conditions.append(f"{parts[0].replace('-', '').strip()} = '{parts[1].strip()}'")
+                if tables and columns:
+                    query = f"SELECT {', '.join(columns)} FROM {tables[0]}"
+                    if conditions:
+                        query += f" WHERE {' AND '.join(conditions)}"
+                    self.logger.debug(f"Mock LLM response: {query}")
+                    return query
+                self.logger.warning("Insufficient data for mock LLM response")
+                return "# Mock query: insufficient data"
+            self.logger.error("Mock LLM call attempted but mock_enabled is False")
+            raise PromptError("Mock LLM call not enabled")
+        except Exception as e:
+            self.logger.error(f"Failed to simulate LLM call: {str(e)}")
+            raise PromptError(f"Failed to simulate LLM call: {str(e)}")

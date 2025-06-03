@@ -1,0 +1,347 @@
+2025-06-04 04:55:29 - root - DEBUG - Logging configuration applied from logging_config.ini
+2025-06-04 04:55:29 - root - DEBUG - Created new LoggingSetup instance: 1532021464848
+2025-06-04 04:55:29,280 - datascriber.main.system - DEBUG - Created logger datascriber.main.system with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:29,281 - datascriber.main.system - DEBUG - Starting Datascriber CLI
+2025-06-04 04:55:29 - root - DEBUG - get_instance called with config_utils: 1531173701392
+2025-06-04 04:55:29 - root - DEBUG - Returning existing LoggingSetup instance: 1532021464848
+2025-06-04 04:55:29,282 - datascriber.cli.system - DEBUG - Created logger datascriber.cli.system with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:29,282 - datascriber.cli.system - DEBUG - Initializing Orchestrator
+2025-06-04 04:55:29 - root - DEBUG - get_instance called with config_utils: 1531173701392
+2025-06-04 04:55:29 - root - DEBUG - Returning existing LoggingSetup instance: 1532021464848
+2025-06-04 04:55:29,283 - datascriber.orchestrator.system - DEBUG - Created logger datascriber.orchestrator.system with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:29,284 - datascriber.orchestrator.system - DEBUG - Initialized Orchestrator
+2025-06-04 04:55:29,294 - datascriber.cli.system - DEBUG - Initialized CLI Interface
+2025-06-04 04:55:37,173 - datascriber.cli.system - DEBUG - Parsing command: login admin
+2025-06-04 04:55:37,174 - datascriber.cli.system - DEBUG - Executing command: login
+2025-06-04 04:55:37,174 - datascriber.orchestrator.system - INFO - User admin logged in
+2025-06-04 04:55:37,175 - datascriber.cli.system - INFO - User admin logged in
+2025-06-04 04:55:45,020 - datascriber.cli.system - DEBUG - Parsing command: select-datasource bikestores
+2025-06-04 04:55:45,020 - datascriber.cli.system - DEBUG - Executing command: select-datasource
+2025-06-04 04:55:45 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:55:45,022 - datascriber.db.bikestores - DEBUG - Created logger datascriber.db.bikestores with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:45 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:45,023 - datascriber.db.bikestores - DEBUG - Validated datasource: bikestores
+2025-06-04 04:55:45,023 - datascriber.db.bikestores - DEBUG - Initialized SQLite connection to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\bikestores.db
+2025-06-04 04:55:45,024 - datascriber.db.bikestores - DEBUG - Table training_data_bikestores exists with 1 rows, skipping creation
+2025-06-04 04:55:45,025 - datascriber.db.bikestores - DEBUG - Table rejected_queries_bikestores exists with 26 rows, skipping creation
+2025-06-04 04:55:45,026 - datascriber.db.bikestores - DEBUG - Table model_metrics_bikestores exists with 9 rows, skipping creation
+2025-06-04 04:55:45,026 - datascriber.db.bikestores - DEBUG - Table rich_metadata exists with 52 rows, skipping creation
+2025-06-04 04:55:45,070 - datascriber.db.bikestores - DEBUG - Connected to SQL Server: bikestores
+2025-06-04 04:55:45 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:45 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:45,071 - datascriber.db.bikestores - DEBUG - Loading rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:55:45,072 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales with 5 tables
+2025-06-04 04:55:45,082 - datascriber.db.bikestores - INFO - Updated rich metadata for schema sales in SQLite with 39 rows
+2025-06-04 04:55:45,083 - datascriber.db.bikestores - DEBUG - Populated rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:55:45 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:45,084 - datascriber.db.bikestores - DEBUG - Loading rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:55:45,085 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production with 4 tables
+2025-06-04 04:55:45,091 - datascriber.db.bikestores - INFO - Updated rich metadata for schema production in SQLite with 13 rows
+2025-06-04 04:55:45,092 - datascriber.db.bikestores - DEBUG - Populated rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:55:45,092 - datascriber.db.bikestores - DEBUG - Checking metadata for schemas: ['sales', 'production']
+2025-06-04 04:55:45 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:45,093 - datascriber.nlp.bikestores - DEBUG - Created logger datascriber.nlp.bikestores with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:45,928 - datascriber.nlp.bikestores - DEBUG - Loaded spacy model: en_core_web_sm
+2025-06-04 04:55:45,929 - datascriber.nlp.bikestores - DEBUG - Initialized NLPProcessor for datasource: bikestores
+2025-06-04 04:55:45,929 - datascriber.tia.bikestores - DEBUG - Created logger datascriber.tia.bikestores with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:50,720 - datascriber.tia.bikestores - DEBUG - Initialized sentence-transformers model: all-MiniLM-L6-v2
+2025-06-04 04:55:50,721 - datascriber.tia.bikestores - DEBUG - Loaded model from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\models\model_bikestores.pkl
+2025-06-04 04:55:50,721 - datascriber.tia.bikestores - DEBUG - Initialized TableIdentifier for datasource: bikestores
+2025-06-04 04:55:50,722 - datascriber.prompt_generator.bikestores - DEBUG - Created logger datascriber.prompt_generator.bikestores with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:50 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-04 04:55:50,723 - datascriber.prompt_generator.bikestores - DEBUG - Loaded LLM configuration
+2025-06-04 04:55:50,723 - datascriber.prompt_generator.bikestores - DEBUG - Initialized PromptGenerator for datasource: bikestores
+2025-06-04 04:55:50,724 - datascriber.data_executor.bikestores - DEBUG - Created logger datascriber.data_executor.bikestores with level DEBUG; file_handler level: DEBUG
+2025-06-04 04:55:50 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-04 04:55:50,725 - datascriber.data_executor.bikestores - DEBUG - Loaded LLM configuration
+2025-06-04 04:55:50,732 - datascriber.data_executor.bikestores - DEBUG - Connected to SQL Server: bikestores
+2025-06-04 04:55:50,732 - datascriber.data_executor.bikestores - DEBUG - Initialized DataExecutor for datasource: bikestores
+2025-06-04 04:55:50,732 - datascriber.orchestrator.system - INFO - Selected datasource: bikestores
+2025-06-04 04:55:50 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:50 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:55:50,735 - datascriber.cli.system - INFO - Selected datasource: bikestores
+2025-06-04 04:55:52,319 - datascriber.cli.system - DEBUG - Parsing command: query-mode
+2025-06-04 04:55:52,320 - datascriber.cli.system - DEBUG - Executing command: query-mode
+2025-06-04 04:56:01 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:56:01 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,047 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:02,048 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,049 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_sales.json, returning empty synonyms
+2025-06-04 04:56:02,049 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:56:02,049 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:56:02,050 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2016
+2025-06-04 04:56:02,050 - datascriber.nlp.bikestores - INFO - Processed NLQ: Get me sales orders of 2016, result: {'tokens': ['sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,052 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:02,052 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:56:02,053 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,054 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: Get me sales orders of 2016, tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders WHERE YEAR(order_date) = ?'}
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,055 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:02,055 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:02,056 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,056 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,057 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:02,063 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,085 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.json
+2025-06-04 04:56:02,086 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: Get me sales orders of 2016, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv
+2025-06-04 04:56:02,087 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,093 - datascriber.db.bikestores - DEBUG - Checked for existing query 'Get me sales orders of 2016': found
+2025-06-04 04:56:02,095 - datascriber.db.bikestores - DEBUG - Updated training data for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,105 - datascriber.db.bikestores - INFO - Stored training data for NLQ: Get me sales orders of 2016, table now has 1 matching rows
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,133 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:02,133 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,134 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_production.json, returning empty synonyms
+2025-06-04 04:56:02,134 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:56:02,134 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:56:02,135 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2016
+2025-06-04 04:56:02,135 - datascriber.nlp.bikestores - INFO - Processed NLQ: Get me sales orders of 2016, result: {'tokens': ['sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,137 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:02,138 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:56:02,139 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,140 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: Get me sales orders of 2016, tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders'}
+2025-06-04 04:56:02 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:02,142 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:02,142 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:02,142 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,143 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,144 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:02,145 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,162 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.json
+2025-06-04 04:56:02,163 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: Get me sales orders of 2016, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv
+2025-06-04 04:56:02,163 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,166 - datascriber.db.bikestores - DEBUG - Checked for existing query 'Get me sales orders of 2016': found
+2025-06-04 04:56:02,167 - datascriber.db.bikestores - DEBUG - Updated training data for NLQ: Get me sales orders of 2016
+2025-06-04 04:56:02,175 - datascriber.db.bikestores - INFO - Stored training data for NLQ: Get me sales orders of 2016, table now has 1 matching rows
+2025-06-04 04:56:02,177 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:56:02,179 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv
+2025-06-04 04:56:02,181 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:56:02,183 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045602.csv
+2025-06-04 04:56:14 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:14,814 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:14,814 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:14,815 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_sales.json, returning empty synonyms
+2025-06-04 04:56:14,816 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:56:14,816 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:56:14,816 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2015
+2025-06-04 04:56:14,817 - datascriber.nlp.bikestores - INFO - Processed NLQ: Get me sales orders of 2015, result: {'tokens': ['sales', 'orders', '2015'], 'entities': {'DATE': '2015'}, 'extracted_values': {}}
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:14,818 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:14,819 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:56:14,819 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,820 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: Get me sales orders of 2015, tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders'}
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:14,822 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:56:14,822 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:14,823 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,823 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,824 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:14,825 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,841 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045614.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045614.json
+2025-06-04 04:56:14,842 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: Get me sales orders of 2015, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045614.csv
+2025-06-04 04:56:14,843 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,845 - datascriber.db.bikestores - DEBUG - Checked for existing query 'Get me sales orders of 2015': not found
+2025-06-04 04:56:14,846 - datascriber.db.bikestores - DEBUG - Inserted training data for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:14,852 - datascriber.db.bikestores - INFO - Stored training data for NLQ: Get me sales orders of 2015, table now has 1 matching rows
+2025-06-04 04:56:14 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:15 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:15,003 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:15,004 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:56:15 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:15,004 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_production.json, returning empty synonyms
+2025-06-04 04:56:15,005 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:56:15,005 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:56:15,005 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2015
+2025-06-04 04:56:15,006 - datascriber.nlp.bikestores - INFO - Processed NLQ: Get me sales orders of 2015, result: {'tokens': ['sales', 'orders', '2015'], 'entities': {'DATE': '2015'}, 'extracted_values': {}}
+2025-06-04 04:56:15 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:15,007 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:15,007 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:56:15,008 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,008 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: Get me sales orders of 2015, tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders'}
+2025-06-04 04:56:15 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:56:15,009 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:56:15,010 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:15,010 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,011 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,011 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:56:15,013 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,024 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045615.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045615.json
+2025-06-04 04:56:15,025 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: Get me sales orders of 2015, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045615.csv
+2025-06-04 04:56:15,026 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,027 - datascriber.db.bikestores - DEBUG - Checked for existing query 'Get me sales orders of 2015': found
+2025-06-04 04:56:15,029 - datascriber.db.bikestores - DEBUG - Updated training data for NLQ: Get me sales orders of 2015
+2025-06-04 04:56:15,035 - datascriber.db.bikestores - INFO - Stored training data for NLQ: Get me sales orders of 2015, table now has 1 matching rows
+2025-06-04 04:56:15,036 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:56:15,038 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045614.csv
+2025-06-04 04:56:15,039 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:56:15,041 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045615.csv
+2025-06-04 04:56:45,470 - datascriber.cli.system - INFO - Exited query mode
+2025-06-04 04:56:56,539 - datascriber.cli.system - DEBUG - Parsing command: login datauser
+2025-06-04 04:56:56,540 - datascriber.cli.system - DEBUG - Executing command: login
+2025-06-04 04:56:56,540 - datascriber.orchestrator.system - INFO - User datauser logged in
+2025-06-04 04:56:56,541 - datascriber.cli.system - INFO - User datauser logged in
+2025-06-04 04:57:01,442 - datascriber.cli.system - DEBUG - Parsing command: select-datasource bikestores
+2025-06-04 04:57:01,443 - datascriber.cli.system - DEBUG - Executing command: select-datasource
+2025-06-04 04:57:01 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:57:01 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:01,444 - datascriber.db.bikestores - DEBUG - Validated datasource: bikestores
+2025-06-04 04:57:01,445 - datascriber.db.bikestores - DEBUG - Initialized SQLite connection to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\bikestores.db
+2025-06-04 04:57:01,446 - datascriber.db.bikestores - DEBUG - Table training_data_bikestores exists with 2 rows, skipping creation
+2025-06-04 04:57:01,447 - datascriber.db.bikestores - DEBUG - Table rejected_queries_bikestores exists with 26 rows, skipping creation
+2025-06-04 04:57:01,447 - datascriber.db.bikestores - DEBUG - Table model_metrics_bikestores exists with 9 rows, skipping creation
+2025-06-04 04:57:01,448 - datascriber.db.bikestores - DEBUG - Table rich_metadata exists with 52 rows, skipping creation
+2025-06-04 04:57:01,457 - datascriber.db.bikestores - DEBUG - Connected to SQL Server: bikestores
+2025-06-04 04:57:01 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:01 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:01,459 - datascriber.db.bikestores - DEBUG - Loading rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:01,460 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales with 5 tables
+2025-06-04 04:57:01,469 - datascriber.db.bikestores - INFO - Updated rich metadata for schema sales in SQLite with 39 rows
+2025-06-04 04:57:01,470 - datascriber.db.bikestores - DEBUG - Populated rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:01 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:01,471 - datascriber.db.bikestores - DEBUG - Loading rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:01,472 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production with 4 tables
+2025-06-04 04:57:01,479 - datascriber.db.bikestores - INFO - Updated rich metadata for schema production in SQLite with 13 rows
+2025-06-04 04:57:01,480 - datascriber.db.bikestores - DEBUG - Populated rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:02,008 - datascriber.nlp.bikestores - DEBUG - Loaded spacy model: en_core_web_sm
+2025-06-04 04:57:02,008 - datascriber.nlp.bikestores - DEBUG - Initialized NLPProcessor for datasource: bikestores
+2025-06-04 04:57:05,987 - datascriber.tia.bikestores - DEBUG - Initialized sentence-transformers model: all-MiniLM-L6-v2
+2025-06-04 04:57:05,987 - datascriber.tia.bikestores - DEBUG - Loaded model from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\models\model_bikestores.pkl
+2025-06-04 04:57:05,988 - datascriber.tia.bikestores - DEBUG - Initialized TableIdentifier for datasource: bikestores
+2025-06-04 04:57:05 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-04 04:57:05,988 - datascriber.prompt_generator.bikestores - DEBUG - Loaded LLM configuration
+2025-06-04 04:57:05,989 - datascriber.prompt_generator.bikestores - DEBUG - Initialized PromptGenerator for datasource: bikestores
+2025-06-04 04:57:05 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-04 04:57:05,992 - datascriber.data_executor.bikestores - DEBUG - Loaded LLM configuration
+2025-06-04 04:57:05,996 - datascriber.data_executor.bikestores - DEBUG - Connected to SQL Server: bikestores
+2025-06-04 04:57:05,996 - datascriber.data_executor.bikestores - DEBUG - Initialized DataExecutor for datasource: bikestores
+2025-06-04 04:57:05,997 - datascriber.orchestrator.system - INFO - Selected datasource: bikestores
+2025-06-04 04:57:05 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:05 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:06,000 - datascriber.cli.system - INFO - Selected datasource: bikestores
+2025-06-04 04:57:11 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,579 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:11,580 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,581 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_sales.json, returning empty synonyms
+2025-06-04 04:57:11,581 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: query
+2025-06-04 04:57:11,582 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:57:11,582 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:57:11,583 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2016
+2025-06-04 04:57:11,583 - datascriber.nlp.bikestores - INFO - Processed NLQ: query "Get me sales orders of 2016", result: {'tokens': ['query', 'sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,586 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:11,586 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:57:11,587 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,588 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: query "Get me sales orders of 2016", tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders'}
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,589 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:11,589 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:57:11,589 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,590 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,591 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:57:11,592 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,607 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.json
+2025-06-04 04:57:11,608 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: query "Get me sales orders of 2016", saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv
+2025-06-04 04:57:11,609 - datascriber.orchestrator.system - INFO - Executed query for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,611 - datascriber.db.bikestores - DEBUG - Checked for existing query 'query "Get me sales orders of 2016"': not found
+2025-06-04 04:57:11,614 - datascriber.db.bikestores - DEBUG - Inserted training data for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,620 - datascriber.db.bikestores - INFO - Stored training data for NLQ: query "Get me sales orders of 2016", table now has 1 matching rows
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,646 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:11,646 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,648 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_production.json, returning empty synonyms
+2025-06-04 04:57:11,648 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: query
+2025-06-04 04:57:11,649 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:57:11,650 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:57:11,651 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2016
+2025-06-04 04:57:11,651 - datascriber.nlp.bikestores - INFO - Processed NLQ: query "Get me sales orders of 2016", result: {'tokens': ['query', 'sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,653 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:11,653 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:57:11,654 - datascriber.tia.bikestores - INFO - Model-based prediction for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,654 - datascriber.prompt_generator.bikestores - DEBUG - Generating prompt for NLQ: query "Get me sales orders of 2016", tia_result: {'tables': ['sales.orders'], 'columns': ['order_id', 'order_date'], 'extracted_values': {}, 'placeholders': [], 'ddl': '', 'conditions': {'conditions': []}, 'sql': 'SELECT order_id, order_date FROM sales.orders'}
+2025-06-04 04:57:11 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:11,656 - datascriber.prompt_generator.bikestores - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:11,656 - datascriber.prompt_generator.bikestores - DEBUG - Generated mock SQL prompt: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:57:11,656 - datascriber.prompt_generator.bikestores - INFO - Generated prompt for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,657 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,658 - datascriber.data_executor.bikestores - DEBUG - Extracted mock SQL: SELECT order_id, order_date FROM sales.orders
+2025-06-04 04:57:11,659 - datascriber.data_executor.bikestores - DEBUG - Retrieved sample data (5 rows) for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,674 - datascriber.data_executor.bikestores - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.json
+2025-06-04 04:57:11,675 - datascriber.data_executor.bikestores - INFO - Executed query for NLQ: query "Get me sales orders of 2016", saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv
+2025-06-04 04:57:11,675 - datascriber.orchestrator.system - INFO - Executed query for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,677 - datascriber.db.bikestores - DEBUG - Checked for existing query 'query "Get me sales orders of 2016"': found
+2025-06-04 04:57:11,679 - datascriber.db.bikestores - DEBUG - Updated training data for NLQ: query "Get me sales orders of 2016"
+2025-06-04 04:57:11,685 - datascriber.db.bikestores - INFO - Stored training data for NLQ: query "Get me sales orders of 2016", table now has 1 matching rows
+2025-06-04 04:57:11,687 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:57:11,690 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv
+2025-06-04 04:57:11,692 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-04 04:57:11,694 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250604_045711.csv
+2025-06-04 04:57:17 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,731 - datascriber.tia.bikestores - DEBUG - Model confidence too low: 0.7543161511421204
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,739 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:17,739 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,740 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_sales.json, returning empty synonyms
+2025-06-04 04:57:17,740 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: query
+2025-06-04 04:57:17,740 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:57:17,741 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:57:17,741 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2015
+2025-06-04 04:57:17,741 - datascriber.nlp.bikestores - INFO - Processed NLQ: query "Get me sales orders of 2015", result: {'tokens': ['query', 'sales', 'orders', '2015'], 'entities': {'DATE': '2015'}, 'extracted_values': {}}
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,743 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema sales from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_sales_rich.json
+2025-06-04 04:57:17,743 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema sales
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,744 - datascriber.tia.bikestores - ERROR - Metadata prediction error: NLPProcessor.map_synonyms() missing 1 required positional argument: 'schema'
+2025-06-04 04:57:17,746 - datascriber.tia.bikestores - ERROR - No tables predicted for NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,755 - datascriber.db.bikestores - INFO - Stored rejected query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,756 - datascriber.tia.bikestores - CRITICAL - TIA failed to process NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,763 - datascriber.db.bikestores - INFO - Stored rejected query: N/A
+2025-06-04 04:57:17,771 - datascriber.db.bikestores - INFO - Stored rejected query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,772 - datascriber.orchestrator.system - INFO - Notified admin: Logged rejected query 'query "Get me sales orders of 2015"' for bikestores
+2025-06-04 04:57:17,773 - datascriber.orchestrator.system - ERROR - TIA failed to predict tables for NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,791 - datascriber.tia.bikestores - DEBUG - Model confidence too low: 0.7543161511421204
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,801 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:17,801 - datascriber.nlp.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,802 - datascriber.nlp.bikestores - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\synonyms_production.json, returning empty synonyms
+2025-06-04 04:57:17,802 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: query
+2025-06-04 04:57:17,803 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: sales
+2025-06-04 04:57:17,803 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: orders
+2025-06-04 04:57:17,803 - datascriber.nlp.bikestores - DEBUG - No synonym mapping for term: 2015
+2025-06-04 04:57:17,804 - datascriber.nlp.bikestores - INFO - Processed NLQ: query "Get me sales orders of 2015", result: {'tokens': ['query', 'sales', 'orders', '2015'], 'entities': {'DATE': '2015'}, 'extracted_values': {}}
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,805 - datascriber.db.bikestores - DEBUG - Loaded rich metadata for schema production from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores\metadata_data_production_rich.json
+2025-06-04 04:57:17,806 - datascriber.tia.bikestores - DEBUG - Fetched metadata for schema production
+2025-06-04 04:57:17 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores
+2025-06-04 04:57:17,807 - datascriber.tia.bikestores - ERROR - Metadata prediction error: NLPProcessor.map_synonyms() missing 1 required positional argument: 'schema'
+2025-06-04 04:57:17,807 - datascriber.tia.bikestores - ERROR - No tables predicted for NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,816 - datascriber.db.bikestores - INFO - Stored rejected query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,817 - datascriber.tia.bikestores - CRITICAL - TIA failed to process NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,870 - datascriber.db.bikestores - INFO - Stored rejected query: N/A
+2025-06-04 04:57:17,884 - datascriber.db.bikestores - INFO - Stored rejected query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,885 - datascriber.orchestrator.system - INFO - Notified admin: Logged rejected query 'query "Get me sales orders of 2015"' for bikestores
+2025-06-04 04:57:17,886 - datascriber.orchestrator.system - ERROR - TIA failed to predict tables for NLQ: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,887 - datascriber.cli.system - WARNING - No results for query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,898 - datascriber.db.bikestores - INFO - Stored rejected query: query "Get me sales orders of 2015"
+2025-06-04 04:57:17,900 - datascriber.orchestrator.system - INFO - Notified admin: Logged rejected query 'query "Get me sales orders of 2015"' for bikestores
+2025-06-04 04:57:36,420 - datascriber.cli.system - INFO - Exited query mode
+2025-06-04 04:57:39,913 - datascriber.cli.system - DEBUG - Parsing command: exit
+2025-06-04 04:57:39,914 - datascriber.cli.system - INFO - User exited CLI

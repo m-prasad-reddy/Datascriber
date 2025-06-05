@@ -115,29 +115,44 @@ class DataExecutor:
             self.logger.error(f"Failed to connect to SQL Server {self.datasource['name']}: {str(e)}")
             raise ExecutionError(f"Failed to connect to SQL Server: {str(e)}")
 
-    def _call_llm(self, prompt: str) -> str:
+    def _call_llm(self, prompt: str) -> Optional[str]:
         """Call LLM to convert prompt to SQL query.
 
         Args:
             prompt (str): SQL prompt from PromptGenerator.
 
         Returns:
-            str: Generated SQL query.
+            Optional[str]: Generated SQL query, or None if call fails.
 
         Raises:
-            ExecutionError: If LLM call fails.
+            ExecutionError: If LLM call fails critically.
         """
         try:
             if self.llm_config.get("mock_enabled", False):
-                sql_start = prompt.find("SQL Query:\n") + len("SQL Query:\n")
-                sql_query = prompt[sql_start:].strip()
-                if not sql_query or sql_query.startswith("#"):
-                    self.logger.warning("No valid SQL in mock prompt, generating default")
-                    sql_query = "# Mock query: SELECT * FROM table"
+                endpoint = self.llm_config.get("mock_endpoint", "http://localhost:9000/api")
+                self.logger.debug(f"Attempting to use mock LLM at {endpoint}")
+
+                # Send prompt to mock endpoint
+                headers = {"Content-Type": "application/json"}
+                payload = {"prompt": prompt}
+                response = requests.post(endpoint, json=payload, headers=headers, timeout=10)
+                response.raise_for_status()
+                # Handle both response formats
+                response_json = response.json()
+                sql_query = response_json.get("sql_query", "")
+                if not sql_query and "choices" in response_json and response_json["choices"]:
+                    sql_query = response_json["choices"][0].get("text", "")
+                if not sql_query:
+                    self.logger.warning("Empty SQL query from mock LLM")
+                    return None
                 self.logger.debug(f"Extracted mock SQL: {sql_query}")
-                return sql_query
+                return sql_query.strip()
             else:
-                headers = {"Authorization": f"Bearer {self.llm_config['api_key']}"}
+                # OpenAI endpoint
+                if not self.llm_config.get("api_key") or self.llm_config["api_key"] == "your_openai_api_key_here":
+                    self.logger.error("Invalid OpenAI API key in LLM configuration")
+                    raise ExecutionError("Invalid OpenAI API key")
+                headers = {"Authorization": f"Bearer {self.llm_config['api_key']}", "Content-Type": "application/json"}
                 payload = {"prompt": prompt, "max_tokens": 500}
                 response = requests.post(self.llm_config["endpoint"], json=payload, headers=headers)
                 response.raise_for_status()
@@ -146,10 +161,10 @@ class DataExecutor:
                     self.logger.error("Empty SQL query from LLM")
                     raise ExecutionError("Empty SQL query from LLM")
                 self.logger.debug(f"Generated SQL from LLM: {sql_query}")
-                return sql_query
+                return sql_query.strip()
         except requests.RequestException as e:
             self.logger.error(f"LLM API call failed: {str(e)}")
-            raise ExecutionError(f"LLM API call failed: {str(e)}")
+            return None
         except Exception as e:
             self.logger.error(f"Failed to call LLM: {str(e)}")
             raise ExecutionError(f"Failed to call LLM: {str(e)}")
@@ -323,8 +338,21 @@ class DataExecutor:
         try:
             sql_query = self._call_llm(prompt)
             if not sql_query or sql_query.startswith("#"):
-                self.logger.error("Invalid SQL query generated")
-                raise ExecutionError("Invalid SQL query generated")
+                self.logger.error("Invalid or empty SQL query generated")
+                # Skip rejected query storage for S3 datasources
+                if self.datasource["type"] != "sqlserver":
+                    self.logger.warning("Rejected query storage not implemented for S3")
+                else:
+                    try:
+                        self.storage_manager.store_rejected_query(
+                            query=nlq,
+                            reason="Invalid or empty SQL query generated",
+                            user=user,
+                            error_type="INVALID_SQL"
+                        )
+                    except StorageError as se:
+                        self.logger.error(f"Failed to store rejected query: {str(se)}")
+                raise ExecutionError("Invalid or empty SQL query generated")
 
             if self.datasource["type"] == "sqlserver":
                 results = self._execute_sql_server_query(sql_query, user, nlq)

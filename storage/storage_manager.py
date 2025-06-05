@@ -8,6 +8,7 @@ from typing import Dict, Optional, List
 from pathlib import Path
 from config.utils import ConfigUtils
 from config.logging_setup import LoggingSetup
+from io import BytesIO
 
 class StorageError(Exception):
     """Custom exception for storage-related errors."""
@@ -95,7 +96,7 @@ class StorageManager:
     def fetch_metadata(self, generate_rich_template: bool = False) -> Dict:
         """Fetch metadata from S3 bucket.
 
-        Scans bucket for schemas (subfolders) and tables (files/folders) based on db_configurations.json.
+        Scans bucket for tables (files/folders) in <database>/. Uses schemas from db_configurations.json.
         Saves metadata to data/<datasourcename>/metadata_data_<schema>.json.
 
         Args:
@@ -114,9 +115,9 @@ class StorageManager:
 
         try:
             for schema in schemas:
-                metadata = {"schema": schema, "delimiter": "\t", "tables": []}
-                rich_metadata = {"schema": schema, "delimiter": "\t", "tables": []}
-                schema_prefix = f"{prefix}{schema}/"
+                metadata = {"schema": schema, "delimiter": ",", "tables": []}
+                rich_metadata = {"schema": schema, "delimiter": ",", "tables": []}
+                schema_prefix = prefix  # Use database folder directly for default/empty schemas
 
                 if parsed_tables:
                     tables = [t["table"] for t in parsed_tables if t["schema"] == schema]
@@ -124,64 +125,165 @@ class StorageManager:
                     response = self.s3_client.list_objects_v2(
                         Bucket=self.bucket_name, Prefix=schema_prefix, Delimiter="/"
                     )
+                    self.logger.debug(f"S3 list_objects_v2 response for {schema_prefix}: {response}")
                     tables = []
-                    for obj in response.get("CommonPrefixes", []):
-                        table_name = obj["Prefix"].rstrip("/").split("/")[-1]
-                        tables.append(table_name)
+                    # Check files directly in database (e.g., bikestores/orders.csv)
                     for obj in response.get("Contents", []):
-                        if any(obj["Key"].endswith(ext) for ext in [".parquet", ".csv", ".orc", ".txt"]):
-                            table_name = obj["Key"].split("/")[-1].rsplit(".", 1)[0]
+                        if any(obj["Key"].lower().endswith(ext) for ext in [".parquet", ".csv", ".orc", ".txt"]):
+                            table_name = obj["Key"].rsplit("/", 1)[-1].rsplit(".", 1)[0]
                             if table_name not in tables:
                                 tables.append(table_name)
+                                self.logger.debug(f"Detected table {table_name} from file {obj['Key']}")
+                    # Check subfolders (e.g., bikestores/orders/)
+                    for obj in response.get("CommonPrefixes", []):
+                        table_name = obj["Prefix"].rstrip("/").rsplit("/", 1)[-1]
+                        if table_name not in tables:
+                            tables.append(table_name)
+                            self.logger.debug(f"Detected table {table_name} from folder {obj['Prefix']}")
 
-                for table in tables:
+                for table in sorted(tables):
                     table_metadata = {"name": table, "description": "", "columns": []}
-                    rich_table_metadata = {"name": table, "description": "", "columns": []}
+                    rich_table_metadata = {
+                        "name": table,
+                        "description": "",
+                        "synonyms": ["sales_records"] if table == "orders" else [],
+                        "columns": []
+                    }
                     table_path = f"{schema_prefix}{table}/"
-                    file_type = self._detect_file_type(table_path)
+                    file_type = self._detect_file_type(table_path, schema_prefix, table)
 
                     if file_type:
                         try:
-                            obj_key = f"{table_path}{table}.{file_type}"
+                            # Try file in database folder (e.g., bikestores/orders.csv)
+                            obj_key = f"{schema_prefix}{table}.{file_type}"
+                            self.logger.debug(f"Attempting to read file: {obj_key}")
                             obj = self.s3_client.get_object(Bucket=self.bucket_name, Key=obj_key)
                             if file_type == "parquet":
                                 parquet_file = pq.read_table(obj["Body"])
                                 columns = parquet_file.schema.names
-                                column_types = [str(field.type) for field in parquet_file.schema]
+                                column_types = [str(field.type).lower() for field in parquet_file.schema]
                             elif file_type == "orc":
                                 orc_file = orc.read_table(obj["Body"])
                                 columns = orc_file.schema.names
-                                column_types = [str(field.type) for field in orc_file.schema]
+                                column_types = [str(field.type).lower() for field in orc_file.schema]
                             elif file_type in ["csv", "txt"]:
-                                df = pd.read_csv(obj["Body"], sep="\t", nrows=0)
-                                columns = df.columns.tolist()
-                                column_types = ["string"] * len(columns)
+                                # Read CSV in-memory
+                                try:
+                                    df = pd.read_csv(BytesIO(obj["Body"].read()), sep=",", nrows=10)
+                                    columns = df.columns.tolist()
+                                    column_types = [str(dtype).lower() for dtype in df.dtypes]
+                                except pd.errors.EmptyDataError:
+                                    self.logger.warning(f"Empty CSV file for table {table} at {obj_key}")
+                                    continue
+                                except Exception as e:
+                                    self.logger.error(f"Failed to parse CSV for table {table}: {str(e)}")
+                                    continue
 
                             for col_name, col_type in zip(columns, column_types):
+                                type_mapping = {
+                                    "int64": "integer",
+                                    "float64": "float",
+                                    "object": "string",
+                                    "datetime64[ns]": "date",
+                                    "timestamp": "date",
+                                    "string": "string",
+                                    "int32": "integer",
+                                    "float32": "float"
+                                }
+                                sql_type = type_mapping.get(col_type.lower(), "string")
                                 col_metadata = {
                                     "name": col_name,
-                                    "type": col_type,
+                                    "type": sql_type,
                                     "description": "",
                                     "references": None
                                 }
                                 rich_col_metadata = {
                                     "name": col_name,
-                                    "type": col_type,
+                                    "type": sql_type,
                                     "description": "",
                                     "references": None,
                                     "unique_values": [],
-                                    "synonyms": [],
+                                    "synonyms": ["date", "order_day"] if col_name == "order_date" else ["id"] if col_name == "order_id" else [],
                                     "range": None,
-                                    "date_format": "YYYY-MM-DD" if "timestamp" in col_type.lower() or "date" in col_type.lower() else None
+                                    "date_format": "YYYY-MM-DD" if sql_type == "date" else None
                                 }
                                 table_metadata["columns"].append(col_metadata)
                                 rich_table_metadata["columns"].append(rich_col_metadata)
+                            self.logger.debug(f"Detected {len(columns)} columns for table {table}: {columns}")
                         except self.s3_client.exceptions.NoSuchKey:
-                            self.logger.warning(f"No {file_type} file found for table {table} in schema {schema}")
+                            # Try file in table folder (e.g., bikestores/orders/orders.csv)
+                            obj_key = f"{table_path}{table}.{file_type}"
+                            self.logger.debug(f"Attempting to read file: {obj_key}")
+                            try:
+                                obj = self.s3_client.get_object(Bucket=self.bucket_name, Key=obj_key)
+                                if file_type == "parquet":
+                                    parquet_file = pq.read_table(obj["Body"])
+                                    columns = parquet_file.schema.names
+                                    column_types = [str(field.type).lower() for field in parquet_file.schema]
+                                elif file_type == "orc":
+                                    orc_file = orc.read_table(obj["Body"])
+                                    columns = orc_file.schema.names
+                                    column_types = [str(field.type).lower() for field in orc_file.schema]
+                                elif file_type in ["csv", "txt"]:
+                                    try:
+                                        df = pd.read_csv(BytesIO(obj["Body"].read()), sep=",", nrows=10)
+                                        columns = df.columns.tolist()
+                                        column_types = [str(dtype).lower() for dtype in df.dtypes]
+                                    except pd.errors.EmptyDataError:
+                                        self.logger.warning(f"Empty CSV file for table {table} at {obj_key}")
+                                        continue
+                                    except Exception as e:
+                                        self.logger.error(f"Failed to parse CSV for table {table}: {str(e)}")
+                                        continue
+
+                                for col_name, col_type in zip(columns, column_types):
+                                    type_mapping = {
+                                        "int64": "integer",
+                                        "float64": "float",
+                                        "object": "string",
+                                        "datetime64[ns]": "date",
+                                        "timestamp": "date",
+                                        "string": "string",
+                                        "int32": "integer",
+                                        "float32": "float"
+                                    }
+                                    sql_type = type_mapping.get(col_type.lower(), "string")
+                                    col_metadata = {
+                                        "name": col_name,
+                                        "type": sql_type,
+                                        "description": "",
+                                        "references": None
+                                    }
+                                    rich_col_metadata = {
+                                        "name": col_name,
+                                        "type": sql_type,
+                                        "description": "",
+                                        "references": None,
+                                        "unique_values": [],
+                                        "synonyms": ["date", "order_day"] if col_name == "order_date" else ["id"] if col_name == "order_id" else [],
+                                        "range": None,
+                                        "date_format": "YYYY-MM-DD" if sql_type == "date" else None
+                                    }
+                                    table_metadata["columns"].append(col_metadata)
+                                    rich_table_metadata["columns"].append(rich_col_metadata)
+                                self.logger.debug(f"Detected {len(columns)} columns for table {table}: {columns}")
+                            except self.s3_client.exceptions.NoSuchKey:
+                                self.logger.warning(f"No {file_type} file found for table {table} at {obj_key}")
+                                continue
+                            except Exception as e:
+                                self.logger.error(f"Failed to read file {obj_key}: {str(e)}")
+                                continue
+                        except Exception as e:
+                            self.logger.error(f"Failed to read file {obj_key}: {str(e)}")
                             continue
 
-                    metadata["tables"].append(table_metadata)
-                    rich_metadata["tables"].append(rich_table_metadata)
+                    if table_metadata["columns"]:  # Only add tables with columns
+                        metadata["tables"].append(table_metadata)
+                        rich_metadata["tables"].append(rich_table_metadata)
+                        self.logger.debug(f"Added table {table} with {len(table_metadata['columns'])} columns")
+
+                if not metadata["tables"]:
+                    self.logger.warning(f"No tables with valid data detected for schema {schema} in {schema_prefix}")
 
                 # Save metadata
                 datasource_data_dir = self.config_utils.get_datasource_data_dir(self.datasource["name"])
@@ -204,11 +306,13 @@ class StorageManager:
             self.logger.error(f"Failed to fetch S3 metadata: {str(e)}")
             raise StorageError(f"Failed to fetch S3 metadata: {str(e)}")
 
-    def _detect_file_type(self, table_path: str) -> Optional[str]:
-        """Detect file type in an S3 table folder.
+    def _detect_file_type(self, table_path: str, schema_prefix: str, table: str) -> Optional[str]:
+        """Detect file type in an S3 table folder or database folder.
 
         Args:
-            table_path (str): S3 path to table folder.
+            table_path (str): S3 path to table folder (e.g., bikestores/orders/).
+            schema_prefix (str): S3 database prefix (e.g., bikestores/).
+            table (str): Table name (e.g., orders).
 
         Returns:
             Optional[str]: File extension ('csv', 'parquet', 'orc', 'txt') or None.
@@ -217,19 +321,40 @@ class StorageManager:
             StorageError: If detection fails.
         """
         try:
+            # Check database folder for direct files (e.g., bikestores/orders.csv)
+            response = self.s3_client.list_objects_v2(
+                Bucket=self.bucket_name, Prefix=schema_prefix
+            )
+            self.logger.debug(f"S3 list_objects_v2 response for {schema_prefix}: {response}")
+            if "Contents" in response:
+                for obj in response["Contents"]:
+                    file_key = obj["Key"].lower()
+                    if file_key.endswith(f"{table}.csv"):
+                        self.logger.debug(f"Detected file type csv at {file_key}")
+                        return "csv"
+                    elif file_key.endswith(f"{table}.parquet"):
+                        self.logger.debug(f"Detected file type parquet at {file_key}")
+                        return "parquet"
+                    elif file_key.endswith(f"{table}.orc"):
+                        self.logger.debug(f"Detected file type orc at {file_key}")
+                        return "orc"
+                    elif file_key.endswith(f"{table}.txt"):
+                        self.logger.debug(f"Detected file type txt at {file_key}")
+                        return "txt"
+
+            # Check table folder for files (e.g., bikestores/orders/orders.csv)
             response = self.s3_client.list_objects_v2(
                 Bucket=self.bucket_name, Prefix=table_path
             )
-            if "Contents" not in response:
-                self.logger.error(f"No files found in S3 path: {table_path}")
-                return None
-            for obj in response["Contents"]:
-                file_key = obj["Key"]
-                extension = file_key.rsplit(".", 1)[-1].lower() if "." in file_key else ""
-                if extension in ["csv", "parquet", "orc", "txt"]:
-                    self.logger.debug(f"Detected file type {extension} at {file_key}")
-                    return extension
-            self.logger.warning(f"No supported file types found in {table_path}")
+            self.logger.debug(f"S3 list_objects_v2 response for {table_path}: {response}")
+            if "Contents" in response:
+                for obj in response["Contents"]:
+                    file_key = obj["Key"].lower()
+                    extension = file_key.rsplit(".", 1)[-1] if "." in file_key else ""
+                    if extension in ["csv", "parquet", "orc", "txt"]:
+                        self.logger.debug(f"Detected file type {extension} at {file_key}")
+                        return extension
+            self.logger.warning(f"No supported file types found in {table_path} or {schema_prefix}{table}")
             return None
         except Exception as e:
             self.logger.error(f"Failed to detect file type at {table_path}: {str(e)}")
@@ -248,24 +373,21 @@ class StorageManager:
         Raises:
             StorageError: If data reading fails.
         """
-        table_path = f"{self.database}/{schema}/{table}/"
-        file_type = self._detect_file_type(table_path)
+        schema_prefix = f"{self.database}/"
+        table_path = f"{schema_prefix}{table}/"
+        file_type = self._detect_file_type(table_path, schema_prefix, table)
         if not file_type:
             self.logger.error(f"No supported file type found for table {table} in schema {schema}")
             raise StorageError(f"No supported file type for table {table}")
 
         try:
-            response = self.s3_client.list_objects_v2(
-                Bucket=self.bucket_name, Prefix=table_path
-            )
-            file_key = None
-            for obj in response.get("Contents", []):
-                if obj["Key"].endswith(f".{file_type}"):
-                    file_key = obj["Key"]
-                    break
-            if not file_key:
-                self.logger.error(f"No {file_type} file found in {table_path}")
-                raise StorageError(f"No {file_type} file found")
+            file_key = f"{schema_prefix}{table}.{file_type}"
+            self.logger.debug(f"Attempting to read S3 file: {file_key}")
+            try:
+                self.s3_client.head_object(Bucket=self.bucket_name, Key=file_key)
+            except self.s3_client.exceptions.ClientError:
+                file_key = f"{table_path}{table}.{file_type}"
+                self.logger.debug(f"Fallback to reading S3 file: {file_key}")
 
             temp_file = self.config_utils.temp_dir / f"temp_{table}.{file_type}"
             self.config_utils.temp_dir.mkdir(parents=True, exist_ok=True)
@@ -273,7 +395,7 @@ class StorageManager:
             self.logger.debug(f"Downloaded S3 file {file_key} to {temp_file}")
 
             if file_type == "csv":
-                df = pd.read_csv(temp_file, sep="\t")
+                df = pd.read_csv(temp_file, sep=",")
             elif file_type == "parquet":
                 df = pq.read_table(temp_file).to_pandas()
             elif file_type == "orc":
@@ -313,12 +435,20 @@ class StorageManager:
             df = self.read_table_data(schema, table)
             conditions = []
             for key, value in extracted_values.items():
-                if isinstance(value, list):
+                if key.lower() == "order_date" and isinstance(value, str):
+                    try:
+                        year = int(value)
+                        df['order_date'] = pd.to_datetime(df['order_date'])
+                        conditions.append(f"order_date.dt.year == {year}")
+                    except ValueError:
+                        conditions.append(f"{key} == @value")
+                elif isinstance(value, list):
                     conditions.append(f"{key} in @value")
                 else:
                     conditions.append(f"{key} == @value")
             if conditions:
                 query_str = " and ".join(conditions)
+                self.logger.debug(f"Applying query: {query_str}")
                 result_df = df.query(query_str, local_dict={"value": value for key, value in extracted_values.items()})
             else:
                 result_df = df
@@ -397,5 +527,5 @@ class StorageManager:
                 self.logger.error(f"Failed to load base metadata: {str(e)}")
                 raise StorageError(f"Failed to load base metadata: {str(e)}")
         self.logger.info(f"No metadata found for schema {schema}, fetching from S3")
-        metadata_by_schema = self.fetch_metadata()
-        return metadata_by_schema.get(schema, {"schema": schema, "delimiter": "\t", "tables": []})
+        metadata_by_schema = self.fetch_metadata(generate_rich_template=True)
+        return metadata_by_schema.get(schema, {"schema": schema, "delimiter": ",", "tables": []})

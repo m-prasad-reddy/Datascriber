@@ -8,7 +8,7 @@
         "port": 1433,
         "database": "bikestores",
         "username": "sa",
-        "password": ",
+        "password": "",
         "schemas": ["sales","production"],
         "tables": []
       }
@@ -17,8 +17,8 @@
       "name": "bikestores_s3",
       "type": "s3",
       "connection": {
-        "bucket_name": "bikestores-data",
-        "database": "data",
+        "bucket_name": "bike-stores-bucket",
+        "database": "bikestores",
         "region": "us-east-1",
         "schemas": ["default"],
         "tables": []

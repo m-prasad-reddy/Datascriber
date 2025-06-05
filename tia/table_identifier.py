@@ -70,7 +70,7 @@ class TableIdentifier:
         model_config = self._load_model_config()
         self.model_type = model_config.get("model_type", "sentence-transformers")
         self.model_name = model_config.get("model_name", "all-MiniLM-L6-v2")
-        self.confidence_threshold = model_config.get("confidence_threshold", 0.8)
+        self.confidence_threshold = model_config.get("confidence_threshold", 0.7)
         self.st_model = None
         self.model_path = os.path.join(self.config_utils.models_dir, f"model_{datasource['name']}.pkl")
         self.loaded_model = None
@@ -118,7 +118,7 @@ class TableIdentifier:
                     config = json.load(f)
                 return config
             self.logger.debug("No model config found, using defaults")
-            return {"model_type": "sentence-transformers", "model_name": "all-MiniLM-L6-v2", "confidence_threshold": 0.8}
+            return {"model_type": "sentence-transformers", "model_name": "all-MiniLM-L6-v2", "confidence_threshold": 0.7}
         except Exception as e:
             self.logger.error(f"Failed to load model config: {str(e)}")
             raise TIAError(f"Failed to load model config: {str(e)}")
@@ -299,10 +299,10 @@ class TableIdentifier:
                     "conditions": self._extract_conditions(nlp_result),
                     "sql": self._get_stored_sql(query)
                 }
-            self.logger.debug(f"Model confidence too low: {max_sim_score}")
+            self.logger.debug(f"Model confidence too low: {max_sim_score} for NLQ: {nlq}")
             return None
         except Exception as e:
-            self.logger.error(f"Model prediction error: {str(e)}")
+            self.logger.error(f"Model prediction error for NLQ '{nlq}': {str(e)}")
             return None
 
     def _predict_with_metadata(self, nlq: str, schema: str) -> Optional[Dict]:
@@ -333,13 +333,15 @@ class TableIdentifier:
             }
 
             for token in tokens:
-                mapped_term = self.nlp_processor.map_synonyms(token, synonyms)
+                mapped_term = self.nlp_processor.map_synonyms(token, synonyms, schema)
+                self.logger.debug(f"Mapping token '{token}' to '{mapped_term}' for schema {schema}")
                 for table in metadata.get("tables", []):
                     table_name = table["name"]
                     if (mapped_term.lower() in table_name.lower() or
                         any(mapped_term.lower() in s.lower() for s in table.get("synonyms", []))):
                         if table_name not in result["tables"]:
                             result["tables"].append(table_name)
+                            self.logger.debug(f"Added table '{table_name}' for token '{token}'")
                     for column in table.get("columns", []):
                         col_name = column["name"]
                         col_synonyms = column.get("synonyms", [])
@@ -347,12 +349,14 @@ class TableIdentifier:
                             any(mapped_term.lower() in s.lower() for s in col_synonyms)):
                             if col_name not in result["columns"]:
                                 result["columns"].append(col_name)
+                                self.logger.debug(f"Added column '{col_name}' for token '{token}'")
                         if "unique_values" in column:
                             for value in column["unique_values"]:
                                 if token.lower() == value.lower():
                                     result["extracted_values"][col_name] = value
                                     if "?" not in result["placeholders"]:
                                         result["placeholders"].append("?")
+                                    self.logger.debug(f"Extracted value '{value}' for column '{col_name}'")
 
             for table in metadata.get("tables", []):
                 for column in table.get("columns", []):
@@ -363,15 +367,17 @@ class TableIdentifier:
                         )
                         if ref_table_name in result["tables"] and table["name"] not in result["tables"]:
                             result["tables"].append(table["name"])
+                            self.logger.debug(f"Added referenced table '{table['name']}'")
 
             if not result["tables"]:
-                self.logger.debug(f"No tables identified for NLQ: {nlq}")
+                self.logger.debug(f"No tables identified for NLQ: {nlq} in schema {schema}")
                 return None
 
             result["ddl"] = self._generate_ddl(result["tables"], schema)
+            self.logger.debug(f"Generated prediction result for NLQ: {nlq}: {result}")
             return result
         except Exception as e:
-            self.logger.error(f"Metadata prediction error: {str(e)}")
+            self.logger.error(f"Metadata prediction error for NLQ '{nlq}': {str(e)}")
             return None
 
     def _encode_query(self, text: str | List[str]) -> np.ndarray:
@@ -417,10 +423,21 @@ class TableIdentifier:
         """
         conditions = []
         for key, value in nlp_result.get("extracted_values", {}).items():
-            if isinstance(value, list):
+            if key.lower() == "order_date" and isinstance(value, str):
+                # Handle year-based conditions for order_date
+                try:
+                    year = int(value)
+                    conditions.append(f"YEAR({key}) = {year}")
+                    self.logger.debug(f"Added condition: YEAR({key}) = {year}")
+                except ValueError:
+                    conditions.append(f"{key} = '{value}'")
+                    self.logger.debug(f"Added condition: {key} = '{value}'")
+            elif isinstance(value, list):
                 conditions.append(f"{key} IN {tuple(value)}")
+                self.logger.debug(f"Added condition: {key} IN {tuple(value)}")
             else:
                 conditions.append(f"{key} = '{value}'")
+                self.logger.debug(f"Added condition: {key} = '{value}'")
         return {"conditions": conditions}
 
     def _get_stored_sql(self, query: str) -> Optional[str]:
@@ -441,7 +458,7 @@ class TableIdentifier:
             result = cursor.fetchone()
             return result[0] if result else None
         except Exception as e:
-            self.logger.error(f"Failed to retrieve stored SQL: {str(e)}")
+            self.logger.error(f"Failed to retrieve stored SQL for query '{query}': {str(e)}")
             return None
         finally:
             cursor.close()
@@ -458,8 +475,11 @@ class TableIdentifier:
             sql (str): SQL query.
 
         Raises:
-            TIAError: If storage fails.
+            TIAError: If storage fails or validation fails.
         """
+        if not all([nlq, tables, columns, sql]):
+            self.logger.error("Missing required training data fields")
+            raise TIAError("Missing required training data fields")
         training_data = {
             "db_source_type": self.datasource["type"],
             "db_name": self.datasource["name"],
@@ -474,7 +494,7 @@ class TableIdentifier:
             self.db_manager.store_training_data(training_data)
             self.logger.info(f"Stored manual training data for NLQ: {nlq}")
         except DBError as e:
-            self.logger.error(f"Failed to store training data: {str(e)}")
+            self.logger.error(f"Failed to store training data for NLQ '{nlq}': {str(e)}")
             raise TIAError(f"Failed to store training data: {str(e)}")
 
     def train_bulk(self, training_data: List[Dict]) -> None:
@@ -487,6 +507,9 @@ class TableIdentifier:
             TIAError: If storage fails.
         """
         for data in training_data:
+            if not all(key in data for key in ["user_query", "related_tables", "specific_columns", "relevant_sql"]):
+                self.logger.error(f"Invalid bulk training data entry: {data}")
+                raise TIAError("Invalid bulk training data entry")
             try:
                 self.db_manager.store_training_data(data)
             except DBError as e:

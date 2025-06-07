@@ -1,110 +1,178 @@
-2025-06-05 16:52:46 - root - DEBUG - Logging configuration applied from logging_config.ini
-2025-06-05 16:52:46 - root - DEBUG - Created new LoggingSetup instance: 2031023621008
-2025-06-05 16:52:46,168 - datascriber.main.system - DEBUG - Created logger datascriber.main.system with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:52:46,168 - datascriber.main.system - DEBUG - Starting Datascriber CLI
-2025-06-05 16:52:46 - root - DEBUG - get_instance called with config_utils: 2030177184656
-2025-06-05 16:52:46 - root - DEBUG - Returning existing LoggingSetup instance: 2031023621008
-2025-06-05 16:52:46,170 - datascriber.cli.system - DEBUG - Created logger datascriber.cli.system with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:52:46,170 - datascriber.cli.system - DEBUG - Initializing Orchestrator
-2025-06-05 16:52:46 - root - DEBUG - get_instance called with config_utils: 2030177184656
-2025-06-05 16:52:46 - root - DEBUG - Returning existing LoggingSetup instance: 2031023621008
-2025-06-05 16:52:46,171 - datascriber.orchestrator.system - DEBUG - Created logger datascriber.orchestrator.system with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:52:46,172 - datascriber.orchestrator.system - DEBUG - Initialized Orchestrator
-2025-06-05 16:52:46,182 - datascriber.cli.system - DEBUG - Initialized CLI Interface
-2025-06-05 16:52:56,606 - datascriber.cli.system - DEBUG - Parsing command: login datauser
-2025-06-05 16:52:56,607 - datascriber.cli.system - DEBUG - Executing command: login
-2025-06-05 16:52:56,607 - datascriber.orchestrator.system - INFO - User datauser logged in
-2025-06-05 16:52:56,608 - datascriber.cli.system - INFO - User datauser logged in
-2025-06-05 16:53:00,015 - datascriber.cli.system - DEBUG - Parsing command: select-datasource bikestores_s3
-2025-06-05 16:53:00,016 - datascriber.cli.system - DEBUG - Executing command: select-datasource
-2025-06-05 16:53:00 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
-2025-06-05 16:53:00,018 - datascriber.storage.bikestores_s3 - DEBUG - Created logger datascriber.storage.bikestores_s3 with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:53:00 - root - DEBUG - Loaded AWS configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\aws_config.json
-2025-06-05 16:53:01,516 - datascriber.storage.bikestores_s3 - DEBUG - Connected to S3 bucket: bike-stores-bucket
-2025-06-05 16:53:01,517 - datascriber.storage.bikestores_s3 - DEBUG - Initialized StorageManager for S3 datasource: bikestores_s3
-2025-06-05 16:53:01,518 - datascriber.nlp.bikestores_s3 - DEBUG - Created logger datascriber.nlp.bikestores_s3 with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:53:02,297 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded spacy model: en_core_web_sm
-2025-06-05 16:53:02,298 - datascriber.nlp.bikestores_s3 - DEBUG - Initialized NLPProcessor for datasource: bikestores_s3
-2025-06-05 16:53:02,298 - datascriber.tia.bikestores_s3 - DEBUG - Created logger datascriber.tia.bikestores_s3 with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:53:06,001 - datascriber.tia.bikestores_s3 - DEBUG - Initialized sentence-transformers model: all-MiniLM-L6-v2
-2025-06-05 16:53:06,002 - datascriber.tia.bikestores_s3 - INFO - No model found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\models\model_bikestores_s3.pkl
-2025-06-05 16:53:06,003 - datascriber.tia.bikestores_s3 - DEBUG - Initialized TableIdentifier for datasource: bikestores_s3
-2025-06-05 16:53:06,004 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Created logger datascriber.prompt_generator.bikestores_s3 with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:53:06 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
-2025-06-05 16:53:06,005 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded LLM configuration
-2025-06-05 16:53:06,005 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Initialized PromptGenerator for datasource: bikestores_s3
-2025-06-05 16:53:06,006 - datascriber.data_executor.bikestores_s3 - DEBUG - Created logger datascriber.data_executor.bikestores_s3 with level DEBUG; file_handler level: DEBUG
-2025-06-05 16:53:06 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
-2025-06-05 16:53:06,006 - datascriber.data_executor.bikestores_s3 - DEBUG - Loaded LLM configuration
-2025-06-05 16:53:06,007 - datascriber.data_executor.bikestores_s3 - DEBUG - Initialized DataExecutor for datasource: bikestores_s3
-2025-06-05 16:53:06,007 - datascriber.orchestrator.system - INFO - Selected datasource: bikestores_s3
-2025-06-05 16:53:06 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:06,008 - datascriber.cli.system - INFO - Selected datasource: bikestores_s3
-2025-06-05 16:53:22 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,427 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: Get me sales orders of 2017
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,438 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:53:22,438 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,440 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json, using default synonyms
-2025-06-05 16:53:22,440 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: sales
-2025-06-05 16:53:22,440 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
-2025-06-05 16:53:22,442 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: 2017
-2025-06-05 16:53:22,442 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: Get me sales orders of 2017, result: {'tokens': ['sales', 'orders', '2017'], 'entities': {'DATE': '2017'}, 'extracted_values': {}}
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,444 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:53:22,444 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,445 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: sales
-2025-06-05 16:53:22,445 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'sales' to 'sales' for schema default
-2025-06-05 16:53:22,445 - datascriber.tia.bikestores_s3 - DEBUG - Added table 'orders' for token 'sales'
-2025-06-05 16:53:22,446 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
-2025-06-05 16:53:22,446 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'orders' to 'orders' for schema default
-2025-06-05 16:53:22,447 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: 2017
-2025-06-05 16:53:22,448 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token '2017' to '2017' for schema default
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,449 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:53:22,449 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
-2025-06-05 16:53:22,450 - datascriber.tia.bikestores_s3 - DEBUG - Generated prediction result for NLQ: Get me sales orders of 2017: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
-2025-06-05 16:53:22,450 - datascriber.tia.bikestores_s3 - INFO - Metadata-based prediction for NLQ: Get me sales orders of 2017
-2025-06-05 16:53:22,451 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Generating prompt for NLQ: Get me sales orders of 2017, tia_result: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
-2025-06-05 16:53:22 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:53:22,452 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:53:22,453 - datascriber.prompt_generator.bikestores_s3 - WARNING - Insufficient data for mock query: columns=[], tables=['orders']
-2025-06-05 16:53:22,454 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2017
-2025-06-05 16:53:22,454 - datascriber.data_executor.bikestores_s3 - DEBUG - Attempting to use mock LLM at http://localhost:9000/api
-2025-06-05 16:53:24,517 - datascriber.data_executor.bikestores_s3 - ERROR - LLM API call failed: 500 Server Error: INTERNAL SERVER ERROR for url: http://localhost:9000/api
-2025-06-05 16:53:24,519 - datascriber.data_executor.bikestores_s3 - ERROR - Invalid or empty SQL query generated
-2025-06-05 16:53:24,522 - datascriber.data_executor.bikestores_s3 - WARNING - Rejected query storage not implemented for S3
-2025-06-05 16:53:24,524 - datascriber.data_executor.bikestores_s3 - ERROR - Failed to execute query: Invalid or empty SQL query generated
-2025-06-05 16:53:24,525 - datascriber.orchestrator.system - WARNING - S3 rejected query storage not implemented
-2025-06-05 16:53:24,526 - datascriber.orchestrator.system - ERROR - Failed to process NLQ 'Get me sales orders of 2017': Failed to execute query: Invalid or empty SQL query generated
-2025-06-05 16:53:24,527 - datascriber.cli.system - WARNING - No results for query: Get me sales orders of 2017
-2025-06-05 16:53:24,527 - datascriber.orchestrator.system - WARNING - S3 rejected query storage not implemented
-2025-06-05 16:55:00 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
-2025-06-05 16:55:00 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:55:00,919 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: eit
-2025-06-05 16:55:00 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:55:00,925 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:55:00,926 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
-2025-06-05 16:55:00 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:55:00,927 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym file found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json, using default synonyms
-2025-06-05 16:55:00,927 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: eit
-2025-06-05 16:55:00,928 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: eit, result: {'tokens': ['eit'], 'entities': {'ORG': 'eit'}, 'extracted_values': {}}
-2025-06-05 16:55:00 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:55:00,930 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
-2025-06-05 16:55:00,930 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
-2025-06-05 16:55:00 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
-2025-06-05 16:55:00,931 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: eit
-2025-06-05 16:55:00,932 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'eit' to 'eit' for schema default
-2025-06-05 16:55:00,932 - datascriber.tia.bikestores_s3 - DEBUG - No tables identified for NLQ: eit in schema default
-2025-06-05 16:55:00,933 - datascriber.tia.bikestores_s3 - ERROR - No tables predicted for NLQ: eit
-2025-06-05 16:55:00,933 - datascriber.tia.bikestores_s3 - ERROR - Prediction failed for NLQ 'eit': 'NoneType' object has no attribute 'store_rejected_query'
-2025-06-05 16:55:00,934 - datascriber.orchestrator.system - WARNING - S3 rejected query storage not implemented
-2025-06-05 16:55:00,935 - datascriber.orchestrator.system - ERROR - Failed to process NLQ 'eit': Prediction failed: 'NoneType' object has no attribute 'store_rejected_query'
-2025-06-05 16:55:00,936 - datascriber.cli.system - WARNING - No results for query: eit
-2025-06-05 16:55:00,936 - datascriber.orchestrator.system - WARNING - S3 rejected query storage not implemented
-2025-06-05 16:55:06,339 - datascriber.cli.system - INFO - Exited query mode
-2025-06-05 16:55:11,433 - datascriber.cli.system - DEBUG - Parsing command: exit
-2025-06-05 16:55:11,434 - datascriber.cli.system - INFO - User exited CLI
+2025-06-07 23:02:59 - root - DEBUG - Logging configuration applied from logging_config.ini
+2025-06-07 23:02:59 - root - DEBUG - Created new LoggingSetup instance: 2374493771920
+2025-06-07 23:02:59,476 - datascriber.main.system - DEBUG - Created logger datascriber.main.system with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:02:59,476 - datascriber.main.system - DEBUG - Starting Datascriber CLI
+2025-06-07 23:02:59 - root - DEBUG - get_instance called with config_utils: 2374488066256
+2025-06-07 23:02:59 - root - DEBUG - Returning existing LoggingSetup instance: 2374493771920
+2025-06-07 23:02:59,489 - datascriber.cli.system - DEBUG - Created logger datascriber.cli.system with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:02:59,489 - datascriber.cli.system - DEBUG - Initializing Orchestrator
+2025-06-07 23:02:59 - root - DEBUG - get_instance called with config_utils: 2374488066256
+2025-06-07 23:02:59 - root - DEBUG - Returning existing LoggingSetup instance: 2374493771920
+2025-06-07 23:02:59,491 - datascriber.orchestrator.system - DEBUG - Created logger datascriber.orchestrator.system with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:02:59,491 - datascriber.orchestrator.system - DEBUG - Initialized Orchestrator
+2025-06-07 23:02:59,502 - datascriber.cli.system - DEBUG - Initialized CLI Interface
+2025-06-07 23:03:23,431 - datascriber.cli.system - DEBUG - Parsing command: login datauser
+2025-06-07 23:03:23,431 - datascriber.cli.system - DEBUG - Executing command: login
+2025-06-07 23:03:23,431 - datascriber.orchestrator.system - INFO - User datauser logged in
+2025-06-07 23:03:23,431 - datascriber.cli.system - INFO - User datauser logged in
+2025-06-07 23:03:25,485 - datascriber.cli.system - DEBUG - Parsing command: select-datasource bikestores_s3
+2025-06-07 23:03:25,485 - datascriber.cli.system - DEBUG - Executing command: select-datasource
+2025-06-07 23:03:25 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-07 23:03:25,485 - datascriber.storage.bikestores_s3 - DEBUG - Created logger datascriber.storage.bikestores_s3 with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:03:25 - root - DEBUG - Loaded AWS configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\aws_config.json
+2025-06-07 23:03:27,114 - datascriber.storage.bikestores_s3 - DEBUG - Connected to S3 bucket: bike-stores-bucket
+2025-06-07 23:03:27,114 - datascriber.storage.bikestores_s3 - DEBUG - Initialized StorageManager for S3 datasource: bikestores_s3
+2025-06-07 23:03:27,114 - datascriber.nlp.bikestores_s3 - DEBUG - Created logger datascriber.nlp.bikestores_s3 with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:03:27,742 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded spacy model: en_core_web_sm
+2025-06-07 23:03:27,742 - datascriber.nlp.bikestores_s3 - DEBUG - Initialized NLPProcessor for datasource: bikestores_s3
+2025-06-07 23:03:27,742 - datascriber.tia.bikestores_s3 - DEBUG - Created logger datascriber.tia.bikestores_s3 with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:03:31,587 - datascriber.tia.bikestores_s3 - DEBUG - Initialized sentence-transformers model: all-MiniLM-L6-v2
+2025-06-07 23:03:31,587 - datascriber.tia.bikestores_s3 - INFO - No model found at C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\models\model_bikestores_s3.pkl
+2025-06-07 23:03:31,587 - datascriber.tia.bikestores_s3 - DEBUG - Initialized TableIdentifier for datasource: bikestores_s3
+2025-06-07 23:03:31,587 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Created logger datascriber.prompt_generator.bikestores_s3 with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:03:31 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-07 23:03:31,587 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded LLM configuration
+2025-06-07 23:03:31,587 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Initialized PromptGenerator for datasource: bikestores_s3
+2025-06-07 23:03:31,587 - datascriber.data_executor.bikestores_s3 - DEBUG - Created logger datascriber.data_executor.bikestores_s3 with level DEBUG; file_handler level: DEBUG
+2025-06-07 23:03:31 - root - DEBUG - Loaded LLM configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\llm_config.json
+2025-06-07 23:03:31,587 - datascriber.data_executor.bikestores_s3 - DEBUG - Loaded LLM configuration
+2025-06-07 23:03:31 - root - DEBUG - Loaded AWS configuration from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\aws_config.json
+2025-06-07 23:03:31,587 - datascriber.data_executor.bikestores_s3 - DEBUG - Initialized S3 filesystem
+2025-06-07 23:03:31,587 - datascriber.data_executor.bikestores_s3 - DEBUG - Initialized DataExecutor for datasource: bikestores_s3
+2025-06-07 23:03:31,587 - datascriber.orchestrator.system - INFO - Selected datasource: bikestores_s3
+2025-06-07 23:03:31 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:31,587 - datascriber.cli.system - INFO - Selected datasource: bikestores_s3
+2025-06-07 23:03:35 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,608 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: Get me sales orders of 2017
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,608 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35,608 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,624 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:35,624 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:35,625 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:35,626 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term '2017' to canonical '2017'
+2025-06-07 23:03:35,626 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: Get me sales orders of 2017, result: {'tokens': ['sales', 'orders', '2017'], 'entities': {'DATE': '2017'}, 'extracted_values': {}}
+2025-06-07 23:03:35,627 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: Get me sales orders of 2017
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,631 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35,631 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,637 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:35,637 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:35,638 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:35,638 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term '2017' to canonical '2017'
+2025-06-07 23:03:35,639 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: Get me sales orders of 2017, result: {'tokens': ['sales', 'orders', '2017'], 'entities': {'DATE': '2017'}, 'extracted_values': {}}
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,640 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35,641 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,642 - datascriber.tia.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:35,642 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:35,642 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'sales' to 'sales' for schema default
+2025-06-07 23:03:35,642 - datascriber.tia.bikestores_s3 - DEBUG - Added table 'orders' for token 'sales'
+2025-06-07 23:03:35,643 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:35,643 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'orders' to 'orders' for schema default
+2025-06-07 23:03:35,643 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term '2017' to canonical '2017'
+2025-06-07 23:03:35,644 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token '2017' to '2017' for schema default
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,645 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35,645 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:35,645 - datascriber.tia.bikestores_s3 - DEBUG - Generated prediction result for NLQ: Get me sales orders of 2017: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
+2025-06-07 23:03:35,645 - datascriber.tia.bikestores_s3 - INFO - Metadata-based prediction for NLQ: Get me sales orders of 2017
+2025-06-07 23:03:35,645 - datascriber.orchestrator.system - DEBUG - TIA result before prompt generation: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
+2025-06-07 23:03:35,645 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Generating prompt for NLQ: Get me sales orders of 2017, tia_result: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2017'}}
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,649 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,650 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:35,651 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Mapped DATE entity 2017 to column order_date
+2025-06-07 23:03:35,651 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Generated mock SQL prompt: SELECT order_date FROM orders WHERE strftime('%Y', order_date) = '2017'
+2025-06-07 23:03:35,651 - datascriber.prompt_generator.bikestores_s3 - INFO - Generated prompt for NLQ: Get me sales orders of 2017
+2025-06-07 23:03:35,652 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2017
+2025-06-07 23:03:35,652 - datascriber.orchestrator.system - DEBUG - TIA result before execute_query: {'tables': ['orders'], 'columns': ['order_date'], 'extracted_values': {'order_date': '2017'}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2017'}}
+2025-06-07 23:03:35,652 - datascriber.data_executor.bikestores_s3 - DEBUG - Using mock SQL from prompt: SELECT order_date FROM orders WHERE strftime('%Y', order_date) = '2017'
+2025-06-07 23:03:35,652 - datascriber.data_executor.bikestores_s3 - DEBUG - TIA result: {'tables': ['orders'], 'columns': ['order_date'], 'extracted_values': {'order_date': '2017'}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2017'}}
+2025-06-07 23:03:35 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:35,655 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:35,655 - datascriber.data_executor.bikestores_s3 - DEBUG - Using TIA-predicted table: orders
+2025-06-07 23:03:35,873 - datascriber.data_executor.bikestores_s3 - DEBUG - Checking file prefix: s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:37,098 - datascriber.data_executor.bikestores_s3 - DEBUG - Detected single file: s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:37,098 - datascriber.data_executor.bikestores_s3 - DEBUG - Loading data from: s3://bike-stores-bucket/data-files/orders.csv with format: csv
+2025-06-07 23:03:41,047 - datascriber.data_executor.bikestores_s3 - DEBUG - Loaded 1615 rows from s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:41,214 - datascriber.data_executor.bikestores_s3 - DEBUG - Retrieved sample data (5 rows) from S3 (csv) for NLQ: Get me sales orders of 2017
+2025-06-07 23:03:41,214 - datascriber.data_executor.bikestores_s3 - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230341.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230341.json
+2025-06-07 23:03:41,214 - datascriber.data_executor.bikestores_s3 - INFO - Query executed for NLQ: Get me sales orders of 2017, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230341.csv
+2025-06-07 23:03:41,214 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2017
+2025-06-07 23:03:41,230 - datascriber.orchestrator.system - WARNING - S3 training data storage not implemented
+2025-06-07 23:03:41,234 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-07 23:03:41,236 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230341.csv
+2025-06-07 23:03:53 - root - DEBUG - Loaded database configurations from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\app-config\db_configurations.json
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,020 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: Get me sales orders of 2016
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,036 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53,036 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,039 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:53,039 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:53,039 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:53,040 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: 2016
+2025-06-07 23:03:53,040 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: Get me sales orders of 2016, result: {'tokens': ['sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-07 23:03:53,041 - datascriber.nlp.bikestores_s3 - DEBUG - Processing cleaned NLQ: Get me sales orders of 2016
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,045 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: 2016
+2025-06-07 23:03:53,045 - datascriber.nlp.bikestores_s3 - INFO - Processed NLQ: Get me sales orders of 2016, result: {'tokens': ['sales', 'orders', '2016'], 'entities': {'DATE': '2016'}, 'extracted_values': {}}
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,057 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53,057 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,058 - datascriber.tia.bikestores_s3 - DEBUG - Loaded static synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:53,059 - datascriber.nlp.bikestores_s3 - DEBUG - Mapped term 'sales' to canonical 'sales'
+2025-06-07 23:03:53,059 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'sales' to 'sales' for schema default
+2025-06-07 23:03:53,059 - datascriber.tia.bikestores_s3 - DEBUG - Added table 'orders' for token 'sales'
+2025-06-07 23:03:53,059 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: orders
+2025-06-07 23:03:53,060 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token 'orders' to 'orders' for schema default
+2025-06-07 23:03:53,060 - datascriber.nlp.bikestores_s3 - DEBUG - No synonym mapping for term: 2016
+2025-06-07 23:03:53,061 - datascriber.tia.bikestores_s3 - DEBUG - Mapping token '2016' to '2016' for schema default
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,062 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53,062 - datascriber.tia.bikestores_s3 - DEBUG - Fetched metadata for schema default
+2025-06-07 23:03:53,063 - datascriber.tia.bikestores_s3 - DEBUG - Generated prediction result for NLQ: Get me sales orders of 2016: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
+2025-06-07 23:03:53,063 - datascriber.tia.bikestores_s3 - INFO - Metadata-based prediction for NLQ: Get me sales orders of 2016
+2025-06-07 23:03:53,063 - datascriber.orchestrator.system - DEBUG - TIA result before prompt generation: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None}
+2025-06-07 23:03:53,064 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Generating prompt for NLQ: Get me sales orders of 2016, tia_result: {'tables': ['orders'], 'columns': [], 'extracted_values': {}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2016'}}
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,065 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded rich metadata from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,066 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Loaded synonyms from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\synonyms_default.json
+2025-06-07 23:03:53,067 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Fallback: Mapped DATE entity 2016 to column order_date
+2025-06-07 23:03:53,067 - datascriber.prompt_generator.bikestores_s3 - DEBUG - Generated mock SQL prompt: SELECT order_date FROM orders WHERE strftime('%Y', order_date) = '2016'
+2025-06-07 23:03:53,068 - datascriber.prompt_generator.bikestores_s3 - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-07 23:03:53,069 - datascriber.orchestrator.system - INFO - Generated prompt for NLQ: Get me sales orders of 2016
+2025-06-07 23:03:53,069 - datascriber.orchestrator.system - DEBUG - TIA result before execute_query: {'tables': ['orders'], 'columns': ['order_date'], 'extracted_values': {'order_date': '2016'}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2016'}}
+2025-06-07 23:03:53,070 - datascriber.data_executor.bikestores_s3 - DEBUG - Using mock SQL from prompt: SELECT order_date FROM orders WHERE strftime('%Y', order_date) = '2016'
+2025-06-07 23:03:53,070 - datascriber.data_executor.bikestores_s3 - DEBUG - TIA result: {'tables': ['orders'], 'columns': ['order_date'], 'extracted_values': {'order_date': '2016'}, 'placeholders': [], 'ddl': 'CREATE TABLE default.orders (order_id integer, customer_id integer, order_status integer, order_date string, required_date string, shipped_date string, store_id integer, staff_id integer);', 'conditions': {'conditions': []}, 'sql': None, 'entities': {'DATE': '2016'}}
+2025-06-07 23:03:53 - root - DEBUG - Ensured datasource data directory exists: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3
+2025-06-07 23:03:53,071 - datascriber.storage.bikestores_s3 - DEBUG - Loaded rich metadata for schema default from C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\data\bikestores_s3\metadata_data_default_rich.json
+2025-06-07 23:03:53,072 - datascriber.data_executor.bikestores_s3 - DEBUG - Using TIA-predicted table: orders
+2025-06-07 23:03:53,079 - datascriber.data_executor.bikestores_s3 - DEBUG - Checking file prefix: s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:54,337 - datascriber.data_executor.bikestores_s3 - DEBUG - Detected single file: s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:54,337 - datascriber.data_executor.bikestores_s3 - DEBUG - Loading data from: s3://bike-stores-bucket/data-files/orders.csv with format: csv
+2025-06-07 23:03:57,523 - datascriber.data_executor.bikestores_s3 - DEBUG - Loaded 1615 rows from s3://bike-stores-bucket/data-files/orders.csv
+2025-06-07 23:03:57,554 - datascriber.data_executor.bikestores_s3 - DEBUG - Retrieved sample data (5 rows) from S3 (csv) for NLQ: Get me sales orders of 2016
+2025-06-07 23:03:57,566 - datascriber.data_executor.bikestores_s3 - INFO - Generated outputs: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230357.csv, C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230357.json
+2025-06-07 23:03:57,566 - datascriber.data_executor.bikestores_s3 - INFO - Query executed for NLQ: Get me sales orders of 2016, saved results to C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230357.csv
+2025-06-07 23:03:57,566 - datascriber.orchestrator.system - INFO - Executed query for NLQ: Get me sales orders of 2016
+2025-06-07 23:03:57,566 - datascriber.orchestrator.system - WARNING - S3 training data storage not implemented
+2025-06-07 23:03:57,566 - datascriber.cli.system - DEBUG - Formatting 5 rows as table
+2025-06-07 23:03:57,566 - datascriber.cli.system - INFO - Query results saved to: C:\Users\varaprasad\Pythonworks\Text2SQl\Datascriber\temp\query_results\output_20250607_230357.csv
+2025-06-07 23:07:57,545 - datascriber.cli.system - INFO - User interrupted query mode
+2025-06-07 23:07:58,006 - datascriber.cli.system - INFO - User interrupted CLI

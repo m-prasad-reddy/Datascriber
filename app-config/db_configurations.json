@@ -13,12 +13,12 @@
         "tables": []
       }
     },
-    {
+     {
       "name": "bikestores_s3",
       "type": "s3",
       "connection": {
         "bucket_name": "bike-stores-bucket",
-        "database": "bikestores",
+        "database": "data-files",
         "region": "us-east-1",
         "schemas": ["default"],
         "tables": []

@@ -47,7 +47,6 @@ class Orchestrator:
         """
         try:
             self.config_utils = config_utils
-            # Initialize a temporary logger in case LoggingSetup fails
             self.logger = logging.getLogger("orchestrator.temp")
             try:
                 self.logging_setup = LoggingSetup.get_instance(self.config_utils)
@@ -201,16 +200,33 @@ class Orchestrator:
                 self.notify_admin(nlq, schema, "Invalid metadata")
                 return None
 
+            nlp_result = self.nlp_processor.process_query(nlq, schema)
+            if not nlp_result:
+                self.notify_admin(nlq, schema, "NLP processing failed")
+                self.logger.error(f"NLP failed for NLQ: {nlq}")
+                return None
+
             tia_result = self.table_identifier.predict_tables(nlq, self.user, schema)
+            self.logger.debug(f"TIA result before prompt generation: {tia_result}")
             if not tia_result or not tia_result.get("tables"):
                 self.notify_admin(nlq, schema, "No tables predicted by TIA")
                 self.logger.error(f"TIA failed to predict tables for NLQ: {nlq}")
                 return None
 
+            # Merge nlp_result entities into tia_result
+            tia_result["entities"] = nlp_result.get("entities", {})
+
             prompt = self.prompt_generator.generate_prompt(nlq, tia_result, schema)
             self.logger.info(f"Generated prompt for NLQ: {nlq}")
 
-            sample_data, csv_path = self.data_executor.execute_query(prompt, schema, self.user, nlq)
+            self.logger.debug(f"TIA result before execute_query: {tia_result}")
+            sample_data, csv_path = self.data_executor.execute_query(
+                prompt=prompt,
+                schema=schema,
+                user=self.user,
+                nlq=nlq,
+                tia_result=tia_result
+            )
             if sample_data is None:
                 self.notify_admin(nlq, schema, "Query execution returned no data")
                 return None
@@ -247,6 +263,10 @@ class Orchestrator:
         except (TIAError, NLPError, DBError, StorageError, PromptError, ExecutionError) as e:
             self.notify_admin(nlq, schema, str(e))
             self.logger.error(f"Failed to process NLQ '{nlq}': {str(e)}")
+            return None
+        except Exception as e:
+            self.notify_admin(nlq, schema, str(e))
+            self.logger.error(f"Unexpected error processing NLQ '{nlq}': {str(e)}")
             return None
 
     def notify_admin(self, nlq: str, schema: str, reason: str) -> None:

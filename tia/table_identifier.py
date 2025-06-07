@@ -261,9 +261,16 @@ class TableIdentifier:
                 self.logger.info(f"Metadata-based prediction for NLQ: {nlq}")
                 return result
             self.logger.error(f"No tables predicted for NLQ: {nlq}")
-            self.db_manager.store_rejected_query(
-                query=nlq, reason="Unable to process request", user=user, error_type="TIA_FAILURE"
-            )
+            # Skip rejected query storage for S3 datasources
+            if self.datasource["type"] != "sqlserver":
+                self.logger.warning("Rejected query storage not implemented for S3")
+            else:
+                try:
+                    self.storage_manager.store_rejected_query(
+                        query=nlq, reason="Unable to process request", user=user, error_type="TIA_FAILURE"
+                    )
+                except StorageError as se:
+                    self.logger.error(f"Failed to store rejected query: {str(se)}")
             self._notify_admin(f"TIA failed to process NLQ: {nlq}")
             return None
         except Exception as e:

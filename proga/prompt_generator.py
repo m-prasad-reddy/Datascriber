@@ -98,13 +98,14 @@ class PromptGenerator:
         try:
             datasource_dir = self.config_utils.get_datasource_data_dir(self.datasource["name"])
             metadata_path = os.path.join(datasource_dir, f"metadata_data_{schema}_rich.json")
+            os.makedirs(datasource_dir, exist_ok=True)
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
                     metadata = json.load(f)
                 self.logger.debug(f"Loaded rich metadata from {metadata_path}")
                 return metadata
             elif self.datasource["type"] == "sqlserver" and self.db_manager:
-                metadata = self.db_manager.get_metadata(schema)
+                metadata = self.db_manager.get_metadata("dbo" if schema == "default" else schema)
             elif self.datasource["type"] == "s3" and self.storage_manager:
                 metadata = self.storage_manager.get_metadata(schema)
             else:
@@ -116,12 +117,41 @@ class PromptGenerator:
             self.logger.error(f"Failed to fetch metadata for schema {schema}: {str(e)}")
             raise PromptError(f"Failed to fetch metadata: {str(e)}")
 
+    def _load_synonyms(self, schema: str) -> Dict[str, List[str]]:
+        """Load synonyms for a schema.
+
+        Args:
+            schema (str): Schema name (e.g., 'default').
+
+        Returns:
+            Dict[str, List[str]]: Synonym mappings.
+
+        Raises:
+            PromptError: If synonym loading fails.
+        """
+        try:
+            datasource_dir = self.config_utils.get_datasource_data_dir(self.datasource["name"])
+            synonym_path = os.path.join(datasource_dir, f"synonyms_{schema}.json")
+            synonyms = {
+                "order_date": ["order date", "date", "orderdate"]
+            }  # Default synonyms
+            os.makedirs(datasource_dir, exist_ok=True)
+            if os.path.exists(synonym_path):
+                with open(synonym_path, "r") as f:
+                    file_synonyms = json.load(f)
+                    synonyms.update(file_synonyms)
+                self.logger.debug(f"Loaded synonyms from {synonym_path}")
+            return synonyms
+        except Exception as e:
+            self.logger.error(f"Failed to load synonyms for schema {schema}: {str(e)}")
+            raise PromptError(f"Failed to load synonyms: {str(e)}")
+
     def generate_prompt(self, nlq: str, tia_result: Dict, schema: str = "default") -> Optional[str]:
         """Generate an SQL query prompt based on NLQ and TIA results.
 
         Args:
             nlq (str): Natural language query.
-            tia_result (Dict): TIA prediction result with tables, columns, extracted_values, placeholders.
+            tia_result (Dict): TIA prediction result with tables, columns, extracted_values, placeholders, entities.
             schema (str): Schema name, defaults to 'default'.
 
         Returns:
@@ -133,14 +163,61 @@ class PromptGenerator:
         try:
             self.logger.debug(f"Generating prompt for NLQ: {nlq}, tia_result: {tia_result}")
             metadata = self._get_metadata(schema)
+            synonyms = self._load_synonyms(schema)
             tables = tia_result.get("tables", [])
             columns = tia_result.get("columns", [])
             extracted_values = tia_result.get("extracted_values", {})
             placeholders = tia_result.get("placeholders", [])
+            entities = tia_result.get("entities", {})
+            is_s3 = self.datasource["type"] == "s3"
 
             if not tables:
                 self.logger.warning(f"No tables predicted for NLQ: {nlq}")
                 return None
+
+            # Map DATE entities
+            if "DATE" in entities:
+                date_value = entities["DATE"]
+                mapped = False
+                if date_value in synonyms:
+                    for table in metadata.get("tables", []):
+                        if table["name"] in [t.split(".")[-1] for t in tables]:
+                            for col in table.get("columns", []):
+                                if col["name"] in synonyms[date_value]:
+                                    if col["name"] not in columns:
+                                        columns.append(col["name"])
+                                    extracted_values[col["name"]] = date_value
+                                    self.logger.debug(f"Mapped DATE entity {date_value} to column {col['name']}")
+                                    mapped = True
+                                    break
+                            if mapped:
+                                break
+                if not mapped:
+                    # Fallback to date columns
+                    for table in metadata.get("tables", []):
+                        if table["name"] in [t.split(".")[-1] for t in tables]:
+                            for col in table.get("columns", []):
+                                col_type = col.get("type", "").lower()
+                                is_date_column = any(t in col_type for t in ["date", "datetime", "string"])
+                                if is_date_column and col["name"] not in columns:
+                                    columns.append(col["name"])
+                                    extracted_values[col["name"]] = date_value
+                                    self.logger.debug(f"Fallback: Mapped DATE entity {date_value} to column {col['name']}")
+                                    mapped = True
+                                    break
+                            if mapped:
+                                break
+
+            # Use default columns if none provided
+            if not columns:
+                for table in metadata.get("tables", []):
+                    if table["name"] in [t.split(".")[-1] for t in tables]:
+                        columns = [col["name"] for col in table.get("columns", [])[:2]]
+                        self.logger.debug(f"Using default columns {columns} for table {table['name']}")
+                        break
+                if not columns:
+                    columns = ["order_id", "order_date"]
+                    self.logger.warning(f"No columns available for tables {tables}, using fallback: {columns}")
 
             # Build context
             context = []
@@ -151,20 +228,35 @@ class PromptGenerator:
                     cols = []
                     for col in table.get("columns", []):
                         if col["name"] in columns or col["name"] in extracted_values:
-                            col_info = f"  - {col['name']} ({col.get('type', 'unknown')})"
+                            col_info = f"{col['name']} ({col.get('type', 'unknown')})"
                             if col.get("description"):
                                 col_info += f": {col['description']}"
                             if col.get("references"):
                                 col_info += f", References: {col['references']['table']}.{col['references']['column']}"
-                            cols.append(col_info)
+                            cols.append(f"  - {col_info}")
                     if cols:
                         context.append("Columns:")
                         context.extend(cols)
 
+            # Build mock query
+            mock_query = f"SELECT {', '.join(columns)} FROM {tables[0].split('.')[-1]}"
+            if extracted_values:
+                conditions = []
+                for col, val in extracted_values.items():
+                    if "date" in col.lower() or col in columns:
+                        if is_s3:
+                            conditions.append(f"strftime('%Y', {col}) = '{val}'")
+                        else:
+                            conditions.append(f"YEAR({col}) = '{val}'")
+                    else:
+                        conditions.append(f"{col} = '{val}'")
+                if conditions:
+                    mock_query += f" WHERE {' AND '.join(conditions)}"
+
             # Build prompt
             prompt = [
                 "Generate an SQL query for the following request.",
-                f"Natural Language Query: {nlq}",
+                f"Based on Natural Language Query: {nlq}",
                 "Database Schema:"
             ]
             prompt.extend(context)
@@ -174,30 +266,14 @@ class PromptGenerator:
                     prompt.append(f"  - {col}: {val}")
             if placeholders:
                 prompt.append("Placeholders:")
-                for val in placeholders:  # Treat as list
+                for val in placeholders:
                     prompt.append(f"  - {val}")
 
             prompt.append("\nSQL Query:")
-
             if self.llm_config.get("mock_enabled", False):
-                # Mock response for testing
-                if not columns or not tables:
-                    self.logger.warning(f"Insufficient data for mock query: columns={columns}, tables={tables}")
-                    return None
-                # Build safe mock query
-                mock_query = f"SELECT {', '.join(columns)} FROM {tables[0]}"
-                if extracted_values:
-                    conditions = [f"{col} = '{val}'" for col, val in extracted_values.items()]
-                    mock_query += f" WHERE {' AND '.join(conditions)}"
-                elif "DATE" in tia_result.get("entities", {}):
-                    # Fallback for date entities (e.g., '2016')
-                    date_value = tia_result["entities"].get("DATE")
-                    if date_value and columns:
-                        mock_query += f" WHERE YEAR({columns[0]}) = '{date_value}'"
                 prompt.append(mock_query)
                 self.logger.debug(f"Generated mock SQL prompt: {mock_query}")
             else:
-                # Placeholder for real LLM call
                 prompt.append("# TODO: LLM-generated SQL query")
                 self.logger.debug(f"Prepared SQL prompt for LLM processing: {nlq}")
 
@@ -205,7 +281,7 @@ class PromptGenerator:
             self.logger.info(f"Generated prompt for NLQ: {nlq}")
             return final_prompt
         except Exception as e:
-            self.logger.error(f"Failed to generate prompt for NLQ '{nlq}': {str(e)}")
+            self.logger.error(f"Failed to generate prompt for '{nlq}': {str(e)}")
             raise PromptError(f"Failed to generate prompt: {str(e)}")
 
     def mock_llm_call(self, prompt: str) -> str:
@@ -222,7 +298,7 @@ class PromptGenerator:
         """
         try:
             if self.llm_config.get("mock_enabled", False):
-                # Simple mock response based on prompt content
+                is_s3 = self.datasource["type"] == "s3"
                 lines = prompt.split("\n")
                 tables = []
                 columns = []
@@ -231,12 +307,19 @@ class PromptGenerator:
                     if line.startswith("Table: "):
                         tables.append(line.replace("Table: ", ""))
                     elif line.startswith("  - ") and "(" in line:
-                        col_name = line.split("-")[1].split("(")[0].strip()
+                        col_name = line.split("(")[0].split("-")[-1].strip()
                         columns.append(col_name)
                     elif line.startswith("  - ") and ":" in line:
                         parts = line.split(":")
                         if len(parts) > 1:
-                            conditions.append(f"{parts[0].replace('-', '').strip()} = '{parts[1].strip()}'")
+                            col, val = parts[0].replace("-", "").strip(), parts[1].strip()
+                            if "date" in col.lower():
+                                if is_s3:
+                                    conditions.append(f"strftime('%Y', {col}) = '{val}'")
+                                else:
+                                    conditions.append(f"YEAR({col}) = '{val}'")
+                            else:
+                                conditions.append(f"{col} = '{val}'")
                 if tables and columns:
                     query = f"SELECT {', '.join(columns)} FROM {tables[0]}"
                     if conditions:
@@ -244,7 +327,7 @@ class PromptGenerator:
                     self.logger.debug(f"Mock LLM response: {query}")
                     return query
                 self.logger.warning("Insufficient data for mock LLM response")
-                return "# Mock query: insufficient data"
+                return "# Mock SQL query: insufficient data"
             self.logger.error("Mock LLM call attempted but mock_enabled is False")
             raise PromptError("Mock LLM call not enabled")
         except Exception as e:

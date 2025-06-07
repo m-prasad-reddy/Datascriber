@@ -1,71 +1,56 @@
-from flask import Flask, request, jsonify
+import re
+import json
 import logging
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("logs/mock_llm.log")
-    ]
-)
-logger = logging.getLogger(__name__)
+def setup_mock_llm():
+    """Set up the mock LLM server."""
+    @app.route('/api', methods=['POST'])
+    def mock_llm():
+        try:
+            data = request.get_json()
+            if not data or 'prompt' not in data:
+                logging.error("Invalid request: No prompt provided")
+                return jsonify({"error": "No prompt provided"}), 400
 
-@app.route("/api", methods=["GET"])
-def health_check():
-    """Health check endpoint for the mock LLM server.
+            prompt = data['prompt']
+            logging.debug(f"Received prompt: {prompt}")
 
-    Returns:
-        JSON response indicating the server is running.
-    """
-    logger.info("Health check requested")
-    return jsonify({"status": "Mock LLM server is running"}), 200
+            # Check if prompt contains S3 datasource indicator
+            is_s3 = "s3" in prompt.lower() or "bikestores_s3" in prompt.lower()
 
-@app.route("/api", methods=["POST"])
-def mock_llm():
-    """Mock LLM API endpoint that returns SQL from the prompt.
+            # Extract year from prompt
+            year_match = re.search(r"['\"](20\d{2})['\"']", prompt)
+            if year_match:
+                year = year_match.group(1)
+                # Generate SQLite-compatible SQL for S3, standard SQL for others
+                if is_s3:
+                    sql_query = f"SELECT order_id, order_date FROM orders WHERE strftime('%Y', order_date) = '{year}'"
+                else:
+                    sql_query = f"SELECT order_id, order_date FROM orders WHERE YEAR(order_date) = {year}"
+                logging.info(f"Returning mock SQL: {sql_query}")
+                return jsonify({"sql_query": sql_query})
+            
+            # Fallback for specific date cases
+            if "DATE" in prompt.upper() and "'2019'" in prompt:
+                if is_s3:
+                    sql_query = "SELECT order_id, order_date FROM orders WHERE strftime('%Y', order_date) = '2019'"
+                else:
+                    sql_query = "SELECT order_id, order_date FROM orders WHERE YEAR(order_date) = 2019"
+                logging.info(f"Returning mock SQL: {sql_query}")
+                return jsonify({"sql_query": sql_query})
 
-    Expects a JSON payload with a 'prompt' field containing the LLM prompt.
-    Extracts the SQL from 'Example SQL:' or returns a default SQL query if not found.
+            # Default response
+            logging.warning("No specific year found in prompt, returning default response")
+            return jsonify({"sql_query": "SELECT order_id, order_date FROM orders LIMIT 10"})
 
-    Returns:
-        JSON response with the extracted or default SQL query.
-    """
-    try:
-        data = request.get_json()
-        if not data or "prompt" not in data:
-            logger.error("Invalid request: missing 'prompt' field")
-            return jsonify({"error": "Missing 'prompt' field"}), 400
+        except Exception as e:
+            logging.error(f"Error processing request: {str(e)}")
+            return jsonify({"error": str(e)}), 500
 
-        prompt = data["prompt"]
-        logger.debug(f"Received prompt: {prompt[:100]}...")
-
-        # Extract SQL from the prompt
-        example_sql_start = prompt.find("Example SQL:")
-        if example_sql_start == -1:
-            logger.warning("Example SQL not found in prompt, returning default SQL")
-            default_sql = "SELECT order_id, order_date FROM orders WHERE YEAR(order_date) = 2017"
-            return jsonify({"sql_query": default_sql})
-
-        # Find the SQL query after "Example SQL:"
-        sql_start = example_sql_start + len("Example SQL:")
-        sql_query = prompt[sql_start:].strip().split("\n")[0].strip()
-
-        if not sql_query:
-            logger.warning("Empty SQL query extracted, returning default SQL")
-            default_sql = "SELECT order_id, order_date FROM orders WHERE YEAR(order_date) = 2017"
-            return jsonify({"sql_query": default_sql})
-
-        logger.info(f"Returning mock SQL: {sql_query}")
-        return jsonify({"sql_query": sql_query})
-
-    except Exception as e:
-        logger.error(f"Error processing request: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    logger.info("Starting mock LLM server on http://localhost:9000/api")
-    app.run(host="0.0.0.0", port=9000, debug=True)
+if __name__ == '__main__':
+    setup_mock_llm()
+    app.run(host='0.0.0.0', port=9000, debug=False)

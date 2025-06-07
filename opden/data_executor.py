@@ -7,7 +7,9 @@ import pandas as pd
 import pyodbc
 import pyarrow.dataset as ds
 import pyarrow.compute as pc
+import pyarrow.csv as csv
 import boto3
+import s3fs
 from botocore.exceptions import ClientError
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
@@ -15,6 +17,7 @@ from config.utils import ConfigUtils, ConfigError
 from config.logging_setup import LoggingSetup
 from storage.db_manager import DBManager, DBError
 from storage.storage_manager import StorageManager, StorageError
+from pandasql import sqldf
 
 class ExecutionError(Exception):
     """Custom exception for data execution errors."""
@@ -37,6 +40,7 @@ class DataExecutor:
         llm_config (Dict): LLM configuration from llm_config.json.
         temp_dir (str): Temporary directory for query results.
         connection (Optional[pyodbc.Connection]): SQL Server connection.
+        s3_filesystem (s3fs.S3FileSystem): S3 filesystem for data access.
     """
 
     def __init__(
@@ -70,12 +74,43 @@ class DataExecutor:
             self.temp_dir = os.path.join(self.config_utils.temp_dir, "query_results")
             self.connection = None
             os.makedirs(self.temp_dir, exist_ok=True)
+
+            # Initialize S3 filesystem
+            if self.datasource["type"] == "s3":
+                self.s3_filesystem = self._init_s3_filesystem()
+            else:
+                self.s3_filesystem = None
+
             if self.datasource["type"] == "sqlserver":
                 self._init_sql_server_connection()
             self.logger.debug(f"Initialized DataExecutor for datasource: {datasource['name']}")
         except Exception as e:
             self.logger.error(f"Failed to initialize DataExecutor: {str(e)}")
             raise ExecutionError(f"Failed to initialize DataExecutor: {str(e)}")
+
+    def _init_s3_filesystem(self) -> s3fs.S3FileSystem:
+        """Initialize S3 filesystem using s3fs.
+
+        Returns:
+            s3fs.S3FileSystem: Configured S3 filesystem.
+
+        Raises:
+            ExecutionError: If S3 initialization fails.
+        """
+        try:
+            aws_config = self.config_utils.load_aws_config()
+            access_key = aws_config.get("aws_access_key_id")
+            secret_key = aws_config.get("aws_secret_access_key")
+
+            if access_key and secret_key:
+                fs = s3fs.S3FileSystem(key=access_key, secret=secret_key)
+            else:
+                fs = s3fs.S3FileSystem()
+            self.logger.debug("Initialized S3 filesystem")
+            return fs
+        except Exception as e:
+            self.logger.error(f"Failed to initialize S3 filesystem: {str(e)}")
+            raise ExecutionError(f"Failed to initialize S3 filesystem: {str(e)}")
 
     def _load_llm_config(self) -> Dict:
         """Load LLM configuration from llm_config.json.
@@ -129,15 +164,22 @@ class DataExecutor:
         """
         try:
             if self.llm_config.get("mock_enabled", False):
+                # Extract mock SQL directly from prompt if available
+                prompt_lines = prompt.split("\n")
+                for line in prompt_lines:
+                    if line.strip().startswith("SELECT") and "strftime('%Y'" in line:
+                        sql_query = line.strip()
+                        self.logger.debug(f"Using mock SQL from prompt: {sql_query}")
+                        return sql_query
+
+                # Fallback to mock LLM endpoint
                 endpoint = self.llm_config.get("mock_endpoint", "http://localhost:9000/api")
                 self.logger.debug(f"Attempting to use mock LLM at {endpoint}")
 
-                # Send prompt to mock endpoint
                 headers = {"Content-Type": "application/json"}
                 payload = {"prompt": prompt}
                 response = requests.post(endpoint, json=payload, headers=headers, timeout=10)
                 response.raise_for_status()
-                # Handle both response formats
                 response_json = response.json()
                 sql_query = response_json.get("sql_query", "")
                 if not sql_query and "choices" in response_json and response_json["choices"]:
@@ -148,7 +190,6 @@ class DataExecutor:
                 self.logger.debug(f"Extracted mock SQL: {sql_query}")
                 return sql_query.strip()
             else:
-                # OpenAI endpoint
                 if not self.llm_config.get("api_key") or self.llm_config["api_key"] == "your_openai_api_key_here":
                     self.logger.error("Invalid OpenAI API key in LLM configuration")
                     raise ExecutionError("Invalid OpenAI API key")
@@ -169,99 +210,71 @@ class DataExecutor:
             self.logger.error(f"Failed to call LLM: {str(e)}")
             raise ExecutionError(f"Failed to call LLM: {str(e)}")
 
-    def _detect_s3_file_type(self, bucket: str, prefix: str) -> str:
-        """Detect the file type in the S3 prefix.
+    def _detect_s3_file_type(self, bucket: str, prefix: str, table_name: str) -> Tuple[str, str]:
+        """Detect the file type and path in the S3 prefix.
 
         Args:
             bucket (str): S3 bucket name.
-            prefix (str): S3 prefix for the datasource.
+            prefix (str): S3 prefix (e.g., 'data-files/orders' or 'data-files/default/orders').
+            table_name (str): Table name.
 
         Returns:
-            str: File format ('parquet', 'csv', 'orc', 'txt').
+            Tuple[str, str]: File format ('parquet', 'csv', 'orc', 'txt') and S3 path.
 
         Raises:
             ExecutionError: If no files found or mixed file types detected.
         """
         s3_client = boto3.client("s3")
         try:
-            response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
-            files = [obj["Key"] for obj in response.get("Contents", []) if not obj["Key"].endswith("/")]
-            if not files:
-                raise ExecutionError(f"No files found in s3://{bucket}/{prefix}")
+            # Validate table_name
+            if not table_name or table_name.isspace():
+                raise ExecutionError(f"Invalid table name: {table_name}")
+            if "/" in table_name or "\\" in table_name or "ordersorders" in table_name.lower():
+                raise ExecutionError(f"Corrupted table name: {table_name}")
 
-            extensions = {os.path.splitext(f)[1].lower() for f in files}
             valid_extensions = {".parquet", ".csv", ".orc", ".txt"}
-            detected_extensions = extensions & valid_extensions
-            if not detected_extensions:
-                raise ExecutionError(f"No supported file types found: {extensions}")
-            if len(detected_extensions) > 1:
-                raise ExecutionError(f"Mixed file types detected: {detected_extensions}")
+            format_mapping = {"parquet": "parquet", "csv": "csv", "orc": "orc", "txt": "csv"}
 
-            ext = detected_extensions.pop()
-            return {"parquet": "parquet", "csv": "csv", "orc": "orc", "txt": "csv"}[ext[1:]]
+            # Check single file (e.g., data-files/orders.csv or data-files/default/orders.csv)
+            for ext in valid_extensions:
+                file_prefix = f"{prefix}{ext}".replace("\\", "/")
+                self.logger.debug(f"Checking file prefix: s3://{bucket}/{file_prefix}")
+                response = s3_client.list_objects_v2(Bucket=bucket, Prefix=file_prefix)
+                files = [obj["Key"] for obj in response.get("Contents", []) if obj["Key"] == file_prefix]
+                if files:
+                    self.logger.debug(f"Detected single file: s3://{bucket}/{files[0]}")
+                    return format_mapping[ext[1:]], file_prefix
+
+            # Check folder (e.g., data-files/orders/ or data-files/default/orders/)
+            folder_prefix = f"{prefix}/".replace("\\", "/")
+            self.logger.debug(f"Checking folder prefix: s3://{bucket}/{folder_prefix}")
+            response = s3_client.list_objects_v2(Bucket=bucket, Prefix=folder_prefix)
+            files = [obj["Key"] for obj in response.get("Contents", []) if not obj["Key"].endswith("/")]
+            if files:
+                extensions = {os.path.splitext(f)[1].lower() for f in files}
+                detected_extensions = extensions & valid_extensions
+                if not detected_extensions:
+                    raise ExecutionError(f"No supported file types found in s3://{bucket}/{folder_prefix}: {extensions}")
+                if len(detected_extensions) > 1:
+                    raise ExecutionError(f"Mixed file types detected in s3://{bucket}/{folder_prefix}: {detected_extensions}")
+                ext = detected_extensions.pop()
+                self.logger.debug(f"Detected folder file type {ext[1:]} for {table_name}")
+                return format_mapping[ext[1:]], folder_prefix
+
+            raise ExecutionError(f"No files found in s3://{bucket}/{prefix} or {folder_prefix}")
         except ClientError as e:
             self.logger.error(f"Failed to list S3 files: {str(e)}")
             raise ExecutionError(f"Failed to list S3 files: {str(e)}")
 
-    def _execute_sql_server_query(self, sql_query: str, user: str, nlq: str) -> Tuple[Optional[pd.DataFrame], Optional[str]]:
-        """Execute SQL query on SQL Server and return sample data or CSV.
+    def _execute_s3_query(self, sql_query: str, user: str, nlq: str, schema: str, tia_result: Optional[Dict] = None) -> Tuple[Optional[pd.DataFrame], Optional[str]]:
+        """Execute query on S3 data using PyArrow Dataset API and pandasql.
 
         Args:
             sql_query (str): SQL query to execute.
             user (str): User submitting the query.
             nlq (str): Original natural language query.
-
-        Returns:
-            Tuple[Optional[pd.DataFrame], Optional[str]]: Sample data (5 rows) and CSV path, or (None, None).
-
-        Raises:
-            ExecutionError: If query execution fails.
-        """
-        try:
-            cursor = self.connection.cursor()
-            cursor.execute(sql_query)
-            columns = [column[0] for column in cursor.description]
-            rows = cursor.fetchmany(5)
-            sample_data = pd.DataFrame([tuple(row) for row in rows], columns=columns)
-            self.logger.debug(f"Retrieved sample data (5 rows) for NLQ: {nlq}")
-
-            if not sample_data.empty:
-                cursor.execute(sql_query)
-                all_rows = cursor.fetchall()
-                df = pd.DataFrame([tuple(row) for row in all_rows], columns=columns)
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                csv_path = os.path.join(self.temp_dir, f"output_{timestamp}.csv")
-                json_path = os.path.join(self.temp_dir, f"output_{timestamp}.json")
-                df.to_csv(csv_path, index=False)
-                df.to_json(json_path, orient="records", indent=2)
-                self.logger.info(f"Generated outputs: {csv_path}, {json_path}")
-                cursor.close()
-                return sample_data, csv_path
-            else:
-                self.logger.warning("No data returned for query")
-                cursor.close()
-                return None, None
-        except pyodbc.Error as e:
-            self.logger.error(f"SQL Server query execution failed: {str(e)}")
-            try:
-                self.storage_manager.store_rejected_query(
-                    query=nlq,
-                    reason=f"Query execution failed: {str(e)}",
-                    user=user,
-                    error_type="EXECUTION_ERROR"
-                )
-            except StorageError as se:
-                self.logger.error(f"Failed to store rejected query: {str(se)}")
-            raise ExecutionError(f"SQL Server query execution failed: {str(e)}")
-
-    def _execute_s3_query(self, sql_query: str, user: str, nlq: str, schema: str) -> Tuple[Optional[pd.DataFrame], Optional[str]]:
-        """Execute query on S3 data using PyArrow Dataset API.
-
-        Args:
-            sql_query (str): SQL query to execute (parsed for S3 processing).
-            user (str): User submitting the query.
-            nlq (str): Original natural language query.
             schema (str): Schema name.
+            tia_result (Optional[Dict]): TIA prediction result with tables, columns, extracted_values.
 
         Returns:
             Tuple[Optional[pd.DataFrame], Optional[str]]: Sample data and CSV path, or (None, None).
@@ -270,57 +283,106 @@ class DataExecutor:
             ExecutionError: If query execution fails.
         """
         try:
+            self.logger.debug(f"TIA result: {tia_result}")
             metadata = self.storage_manager.get_metadata(schema)
-            tables = metadata.get("tables", [])
-            table_name = tables[0]["name"] if tables else None
-            if not table_name:
-                raise ExecutionError("No tables found in metadata")
+            # Prefer TIA-predicted table
+            table_name = None
+            if tia_result and tia_result.get("tables"):
+                table_name = tia_result.get("tables")[0].split(".")[-1]
+                self.logger.debug(f"Using TIA-predicted table: {table_name}")
+            else:
+                self.logger.warning("No TIA result provided, falling back to metadata")
+                tables = metadata.get("tables", [])
+                if not tables:
+                    raise ExecutionError("No tables found in metadata")
+                table_name = tables[0]["name"]
+                self.logger.debug(f"Using metadata table: {table_name}")
 
             bucket = self.datasource["connection"]["bucket_name"]
-            prefix = os.path.join(self.datasource["connection"]["database"], schema, table_name)
-            file_format = self._detect_s3_file_type(bucket, prefix)
+            database = self.datasource["connection"]["database"]
+            # Construct prefix for all possible structures
+            base_prefix = os.path.join(database, table_name).replace("\\", "/")
+            schema_prefix = os.path.join(database, schema, table_name).replace("\\", "/") if schema != "default" else base_prefix
+            prefixes = [base_prefix, schema_prefix]  # Check both with and without schema
 
-            s3_filesystem = ds.S3FileSystem(region="us-east-1")
-            format_options = {"format": file_format}
+            file_format = None
+            file_path = None
+            for prefix in prefixes:
+                try:
+                    file_format, file_path = self._detect_s3_file_type(bucket, prefix, table_name)
+                    if file_format and file_path:
+                        break
+                except ExecutionError:
+                    continue
+
+            if not file_format or not file_path:
+                raise ExecutionError(f"No valid files found for table {table_name} in prefixes: {prefixes}")
+
+            s3_path = f"s3://{bucket}/{file_path}"
+            self.logger.debug(f"Loading data from: {s3_path} with format: {file_format}")
+
+            # Load data using PyArrow Dataset
             if file_format == "csv":
-                format_options["csv_options"] = {"delimiter": "\t" if file_format == "txt" else ","}
+                csv_format = ds.CsvFileFormat(parse_options=csv.ParseOptions(delimiter=","))
+                dataset = ds.dataset(
+                    s3_path,
+                    format=csv_format,
+                    filesystem=self.s3_filesystem
+                )
+            elif file_format == "parquet":
+                dataset = ds.dataset(s3_path, format="parquet", filesystem=self.s3_filesystem)
+            elif file_format == "orc":
+                dataset = ds.dataset(s3_path, format="orc", filesystem=self.s3_filesystem)
+            else:
+                raise ExecutionError(f"Unsupported file format: {file_format}")
 
-            dataset = ds.dataset(
-                f"s3://{bucket}/{prefix}",
-                **format_options,
-                filesystem=s3_filesystem
-            )
-
+            # Convert to pandas DataFrame
             table = dataset.to_table()
-            sample_data = table.slice(0, 5).to_pandas()
+            df = table.to_pandas()
+            self.logger.debug(f"Loaded {len(df)} rows from {s3_path}")
+
+            # Execute SQL query using pandasql
+            locals_dict = {table_name: df}
+            result_df = sqldf(sql_query, locals_dict)
+            sample_data = result_df.head(5)
             self.logger.debug(f"Retrieved sample data (5 rows) from S3 ({file_format}) for NLQ: {nlq}")
 
             if not sample_data.empty:
-                df = table.to_pandas()
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 csv_path = os.path.join(self.temp_dir, f"output_{timestamp}.csv")
                 json_path = os.path.join(self.temp_dir, f"output_{timestamp}.json")
-                df.to_csv(csv_path, index=False)
-                df.to_json(json_path, orient="records", indent=2)
+                result_df.to_csv(csv_path, index=False)
+                result_df.to_json(json_path, orient="records", indent=2)
                 self.logger.info(f"Generated outputs: {csv_path}, {json_path}")
                 return sample_data, csv_path
             else:
-                self.logger.warning("No data returned from S3")
+                self.logger.warning("No data returned from S3 query")
                 return None, None
-        except (ClientError, ValueError, StorageError) as e:
+        except Exception as e:
             self.logger.error(f"S3 query execution failed: {str(e)}")
-            try:
-                self.storage_manager.store_rejected_query(
-                    query=nlq,
-                    reason=f"S3 query execution failed: {str(e)}",
-                    user=user,
-                    error_type="EXECUTION_ERROR"
-                )
-            except StorageError as se:
-                self.logger.error(f"Failed to store rejected query: {str(se)}")
+            if self.datasource["type"] == "sqlserver":
+                try:
+                    self.storage_manager.store_rejected_query(
+                        query=nlq,
+                        reason=f"S3 query execution failed: {str(e)}",
+                        user=user,
+                        error_type="EXECUTION_ERROR"
+                    )
+                except StorageError as se:
+                    self.logger.error(f"Failed to store rejected query: {str(se)}")
+            else:
+                self.logger.warning("S3 rejected query storage not implemented")
             raise ExecutionError(f"S3 query execution failed: {str(e)}")
 
-    def execute_query(self, prompt: str, schema: str = "default", user: str = "datauser", nlq: str = "") -> Tuple[Optional[pd.DataFrame], Optional[str]]:
+    def execute_query(
+        self,
+        prompt: str,
+        schema: str = "default",
+        user: str = "datauser",
+        nlq: str = "",
+        max_results: int = 10,
+        tia_result: Optional[Dict] = None
+    ) -> Tuple[Optional[pd.DataFrame], Optional[str]]:
         """Execute a query based on the provided prompt.
 
         Args:
@@ -328,9 +390,11 @@ class DataExecutor:
             schema (str): Schema name, defaults to 'default'.
             user (str): User submitting the query, defaults to 'datauser'.
             nlq (str): Original natural language query.
+            max_results (int): Maximum number of rows to return (default is 10).
+            tia_result (Optional[Dict]): TIA prediction result.
 
         Returns:
-            Tuple[Optional[pd.DataFrame], Optional[str]]: Sample data (5 rows) and CSV path, or (None, None).
+            Tuple[Optional[pd.DataFrame], Optional[str]]: Sample data (max_results rows) and CSV path, or (None, None).
 
         Raises:
             ExecutionError: If execution fails.
@@ -338,10 +402,9 @@ class DataExecutor:
         try:
             sql_query = self._call_llm(prompt)
             if not sql_query or sql_query.startswith("#"):
-                self.logger.error("Invalid or empty SQL query generated")
-                # Skip rejected query storage for S3 datasources
+                self.logger.error("Data execution error or empty SQL query")
                 if self.datasource["type"] != "sqlserver":
-                    self.logger.warning("Rejected query storage not implemented for S3")
+                    self.logger.warning("Failed to store rejected data for S3")
                 else:
                     try:
                         self.storage_manager.store_rejected_query(
@@ -355,23 +418,25 @@ class DataExecutor:
                 raise ExecutionError("Invalid or empty SQL query generated")
 
             if self.datasource["type"] == "sqlserver":
+                if schema == "default":
+                    schema = "schema"
                 results = self._execute_sql_server_query(sql_query, user, nlq)
             else:
-                results = self._execute_s3_query(sql_query, user, nlq, schema)
+                results = self._execute_s3_query(sql_query, user, nlq, schema, tia_result)
 
             if results[0] is not None:
-                self.logger.info(f"Executed query for NLQ: {nlq}, saved results to {results[1]}")
+                self.logger.info(f"Query executed for NLQ: {nlq}, saved results to {results[1]}")
             return results
         except Exception as e:
             self.logger.error(f"Failed to execute query: {str(e)}")
-            raise ExecutionError(f"Failed to execute query: {str(e)}")
+            raise ExecutionError(f"Failed to execute: {str(e)}")
 
-    def close_connection(self) -> None:
+    def close_connection(self):
         """Close SQL Server connection if open."""
         if self.connection:
             try:
                 self.connection.close()
-                self.logger.debug(f"Closed SQL Server connection for {self.datasource['name']}")
+                self.logger.debug(f"Closed SQL Server: {self.datasource['name']}")
             except pyodbc.Error as e:
                 self.logger.error(f"Failed to close connection: {str(e)}")
             finally:
@@ -392,12 +457,12 @@ if __name__ == "__main__":
         Database Schema:
         Table: products
         Columns:
-          - product_name (varchar): Name of the product
-          - category_id (int): Category identifier
+          - product_name (varchar): Product name
+          - category_id (int): Category ID
         SQL Query:
         SELECT TOP 5 product_name, category_id FROM products
         """
-        sample_data, csv_path = executor.execute_query(prompt, schema="default", user="datauser", nlq="Show top 5 products")
+        sample_data, csv_path = executor.execute_query(prompt, schema="default", user="sales", nlq="Show top 5 products")
         print("Sample Data:\n", sample_data)
         print("CSV Path:", csv_path)
     except (ConfigError, StorageError, ExecutionError) as e:

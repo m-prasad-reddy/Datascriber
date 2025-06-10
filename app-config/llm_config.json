@@ -1,6 +1,54 @@
 {
-    "api_key": "your_openai_api_key_here",
-    "endpoint": "https://api.openai.com/v1",
-    "mock_enabled": true,
-    "mock_endpoint": "http://localhost:9000/api"
+  "llm_settings": {
+    "primary_model": {
+      "name": "gpt-4o",
+      "deployment": "gpt-4o",
+      "enabled": true,
+      "max_tokens": 4096,
+      "temperature": 0.7,
+      "azure_config_path": "app-config/azure_config.json"
+    },
+    "secondary_model": {
+      "name": "claude",
+      "deployment": "placeholder",
+      "enabled": false,
+      "max_tokens": 0,
+      "temperature": 0.0,
+      "config_path": null
+    }
+  },
+  "prompt_settings": {
+    "system_prompt": "You are a Text-to-SQL assistant for SQL Server and S3 datasources. Generate accurate SQL queries based on user natural language queries. Use strftime for dates, LOWER and LIKE for strings, SUM and AVG for numerics. Ensure queries are valid and optimized.",
+    "max_prompt_length": 2000,
+    "context_fields": ["context_text1", "context_text2"],
+    "validation": {
+      "enabled": true,
+      "rules": {
+        "date_format": ["YYYY-MM-DD", "MM/DD/YYYY", "DD-MM-YYYY"],
+        "error_message": "The input date format is not supported.",
+        "entity_extraction": ["dates", "names", "objects", "places"]
+      }
+    }
+  },
+  "training_settings": {
+    "enabled": true,
+    "training_data_path": "data/training_data.csv",
+    "fields": [
+      "db_config_type",
+      "db_name",
+      "user_query",
+      "related_tables",
+      "specific_columns",
+      "relevant_sql",
+      "extracted_values",
+      "placeholders",
+      "llm_sql",
+      "is_lsql_valid",
+      "context_text1",
+      "context_text2",
+      "IS_SLM_TRAINED",
+      "SCENARIO_ID"
+    ],
+    "scenario_id_type": "incremental_integer"
+  }
 }

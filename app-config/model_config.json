@@ -1,5 +1,30 @@
 {
-    "model_type": "sentence-transformers",
-    "model_name": "all-MiniLM-L6-v2",
-    "confidence_threshold": 0.8
+  "sentence_transformer": {
+    "model_name": "text-embedding-3-small",
+    "deployment": "embedding-model",
+    "enabled": true,
+    "azure_config_path": "app-config/azure_config.json"
+  },
+  "llm": {
+    "primary_model": {
+      "name": "gpt-4o",
+      "deployment": "gpt-4o",
+      "enabled": true,
+      "azure_config_path": "app-config/azure_config.json"
+    },
+    "secondary_model": {
+      "name": "claude",
+      "deployment": "placeholder",
+      "enabled": false,
+      "config_path": null
+    }
+  },
+  "bulk_training": {
+    "enabled": true,
+    "max_rows": 100,
+    "training_data_path": "data/training_data.csv",
+    "is_slm_trained_field": "IS_SLM_TRAINED",
+    "scenario_id_field": "SCENARIO_ID",
+    "scenario_id_type": "incremental_integer"
+  }
 }

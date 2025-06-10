@@ -22,7 +22,7 @@
           "description": "",
           "references": null,
           "unique_values": [],
-          "synonyms": [],
+          "synonyms": ['name'],
           "range": null,
           "date_format": null
         },
@@ -32,7 +32,7 @@
           "description": "",
           "references": null,
           "unique_values": [],
-          "synonyms": [],
+          "synonyms": ['name'],
           "range": null,
           "date_format": null
         },

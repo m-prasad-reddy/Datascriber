@@ -22,7 +22,7 @@
           "type": "string",
           "description": "",
           "references": null,
-          "unique_values": [],
+          "unique_values": ['Electra','Haro','Heller','Pure Cycles','Ritchey','Strider','Sun Bicycles','Surly','Trek'],
           "synonyms": [],
           "range": null,
           "date_format": null
@@ -390,7 +390,7 @@
           "type": "string",
           "description": "",
           "references": null,
-          "unique_values": [],
+          "unique_values": ['Electra Amsterdam Fashion 3i Ladies - 2017/2018','Electra Amsterdam Royal 8i Ladies - 2018','Electra Cruiser 1 Tall - 2016/2018','Electra Townie Original 1 - 2018','Surly Straggler - 2016','Surly Troll Frameset - 2017','Trek Boone 7 - 2017','Trek Marlin 5 - 2018','Trek X-Caliber 8 - 2018'],
           "synonyms": [],
           "range": null,
           "date_format": null

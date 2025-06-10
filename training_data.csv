@@ -1,0 +1,9 @@
+db_config_type,db_name,user_query,related_tables,specific_columns,relevant_sql,extracted_values,placeholders,llm_sql,is_lsql_valid,context_text1,context_text2
+SQL Server,bikestores,Show sales records for bikes sold in 2023.,sales,date,SELECT * FROM sales WHERE YEAR(order_date) = ?,"{""order_date"": ""2023""}","[""?""]",,,,
+SQL Server,bikestores,Find orders from New York with total amount above 500 in 2024.,orders,"city,total_amount,order_date",SELECT * FROM orders WHERE city = ? AND total_amount > ? AND order_date = ?,"{""city"": ""New York"", ""total_amount"": 500, ""order_date"": ""2024""}","[""?"", ""?"", ""?""]",,,,
+S3,bikestores_s3,Show products in categories Bikes or Accessories.,products,category,"SELECT * FROM products WHERE category IN (?, ?)","{""category"": [""Bikes"", ""Accessories""]}","[""?"", ""?""]",,,,
+SQL Server,bikestores,List all customers.,customers,,SELECT * FROM customers,{},[],,,,
+SQL Server,bikestores,List customers who placed orders in California.,"customers,orders","customer_name,state",SELECT c.customer_name FROM customers c JOIN orders o ON c.customer_id = o.customer_id WHERE c.state = ?,"{""state"": ""CA""}","[""?""]",,,,
+SQL Server,bikestores,How many products are in the Bikes category?,products,category,SELECT COUNT(*) FROM products WHERE category = ?,"{""category"": ""Bikes""}","[""?""]",,,,
+S3,bikestores_s3,Show sales records for bikes sold in 2023.,sales,date,"SELECT * FROM sales WHERE strftime('%Y', order_date) = ?","{""order_date"": ""2023""}","[""?""]",,,,
+S3,bikestores_s3,Find orders from New York with total amount above 500 in 2024.,orders,"city,total_amount,order_date","SELECT * FROM orders WHERE city = ? AND total_amount > ? AND strftime('%Y', order_date) = ?","{""city"": ""New York"", ""total_amount"": 500, ""order_date"": ""2024""}","[""?"", ""?"", ""?""]",,,,
